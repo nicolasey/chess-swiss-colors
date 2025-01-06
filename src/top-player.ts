@@ -10,5 +10,6 @@ import type { PlayerColorState } from "./colors";
  * @returns boolean
  */
 export function isTopPlayer(player: PlayerColorState): boolean {
-  return player.score > (player.roundNb / 2);
+  const half = (player.roundNb / 2);
+  return player.score > half;
 }

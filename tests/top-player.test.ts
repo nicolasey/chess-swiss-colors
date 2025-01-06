@@ -19,5 +19,5 @@ test("checks_if_top_player", () => {
 
   const player2 = createPlayerSample(2, 4);
   const top2 = isTopPlayer(player2);
-  expect(top).toBeFalse();
+  expect(top2).toBeFalse();
 });
