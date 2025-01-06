@@ -1,14 +1,5 @@
+import type { ColorDiff } from "./colors";
 import { Color } from "./color.enum";
-
-export type ColorDiff = {
-  // Nb rounds ago, starting from last played round
-  roundAgo: number;
-  roundNb: number;
-
-  // The diff found
-  one: Color;
-  two: Color;
-}
 
 /**
  * Return first line with a difference, from PlayerCard histories

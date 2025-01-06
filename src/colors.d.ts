@@ -13,4 +13,15 @@ export type PlayerColorState = {
 
   colorPreference: Color;
   colorPreferenceLevel: ColorPreference;
+  colorHistory: Color[];
+}
+
+export type ColorDiff = {
+  // Nb rounds ago, starting from last played round
+  roundAgo: number;
+  roundNb: number;
+
+  // The diff found
+  one: Color;
+  two: Color;
 }

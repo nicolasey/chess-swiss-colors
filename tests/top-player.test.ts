@@ -9,7 +9,8 @@ const createPlayerSample = (score: number, roundNb: number): PlayerColorState =>
   score,
   roundNb,
   colorPreference: Color.WHITE,
-  colorPreferenceLevel: ColorPreference.HIGH
+  colorPreferenceLevel: ColorPreference.HIGH,
+  colorHistory: [],
 });
 
 test("checks_if_top_player", () => {
