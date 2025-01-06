@@ -1,4 +1,4 @@
-export * from "./colors";
+export * from "./colors.d";
 export * from "./color.enum";
 export * from "./color-preference.enum";
 

@@ -10,9 +10,12 @@ To install dependencies:
 bun add @nicolasey/chess-colors
 ```
 
-## How too use
+## What is included 
 
-To be explained
+- Color State calculator: give this `getColorPreference` a color history, and it will tell you what is the preferred color, and
+what level of preference should be applied for this player
+- Color Assigner: depending on 2 players color states, returns proper colors for given Pair 
+
 
 ## Kind reminders
 
