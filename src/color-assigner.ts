@@ -5,9 +5,9 @@ import { Color } from "./color.enum";
 /**
  * Give a pair proper colors
  * 
- * @param playerOne string|number
- * @param playerTwo Card
- * @param randomColor Color
+ * @param playerOne PlayerColorState
+ * @param playerTwo PlayerColorState
+ * @param randomColor Color | Color chosen before round 1 as player 1 random start color
  * @param isLastRound boolean (defaults to false) In some systems, absolute color can be bypass if last round && topPlayer
  * @returns ColorAssignment
  */
@@ -32,7 +32,7 @@ export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColor
 function assignColorNoPref(
   playerOne: PlayerColorState,
   playerTwo: PlayerColorState,
-  randomColor: Color) {
+  randomColor: Color): ColorAssignment {
   /**
    * Check if pairing numbers are set
    */
@@ -46,11 +46,11 @@ function assignColorNoPref(
 
   return (oneIsHigherRanked) ?
     { 
-      white: (oneIsEven && randomColor === Color.BLACK) ? playerOne : playerTwo,
-      black: (oneIsEven && randomColor === Color.BLACK) ? playerTwo : playerOne,
+      white: (oneIsEven && randomColor === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
+      black: (oneIsEven && randomColor === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
     } : { 
-      white: (twoIsEven && randomColor === Color.BLACK) ? playerTwo : playerOne,
-      black: (twoIsEven && randomColor === Color.BLACK) ? playerOne : playerTwo,
+      white: (twoIsEven && randomColor === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
+      black: (twoIsEven && randomColor === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
     };
 }
 
@@ -72,6 +72,6 @@ function assignColorsMostAsked(playerOne: PlayerColorState, playerTwo: PlayerCol
     }
 }
 
-function isEven(integer: number) {
+function isEven(integer: number): boolean {
   return integer % 2 === 0
 }

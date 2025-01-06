@@ -12,6 +12,7 @@ bun add @nicolasey/chess-colors
 
 ## How too use
 
+To be explained
 
 ## Kind reminders
 
