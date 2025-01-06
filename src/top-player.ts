@@ -1,0 +1,14 @@
+import type { PlayerColorState } from "./colors";
+
+/**
+ * Checks if a Player is a top player
+ * 
+ * A top player is a Player that have more than half of possible points
+ * A top player might be allowed in some systems to bypass color absolute pref IF last round
+ * 
+ * @param player PlayerColorState
+ * @returns boolean
+ */
+export function isTopPlayer(player: PlayerColorState): boolean {
+  return player.score > (player.roundNb / 2);
+}

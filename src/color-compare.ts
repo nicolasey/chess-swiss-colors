@@ -1,0 +1,41 @@
+import { Color } from "./color.enum";
+
+export type ColorDiff = {
+  // Nb rounds ago, starting from last played round
+  roundAgo: number;
+  roundNb: number;
+
+  // The diff found
+  one: Color;
+  two: Color;
+}
+
+/**
+ * Return first line with a difference, from PlayerCard histories
+ * Returns null if history is the same
+ * 
+ * @param playerOneHistory Item[]
+ * @param playerTwoHistory Item[]
+ * @returns ColorDiff | null
+ */
+export function evaluateColorHistory(playerOneHistory: Color[], playerTwoHistory: Color[]): ColorDiff | null {
+  playerOneHistory.reverse();
+  playerTwoHistory.reverse();
+
+  // @todo check if BYE counts in history eval
+
+  const colorsLength = Math.min(playerOneHistory.length, playerTwoHistory.length);
+  for (let i = 0; i < colorsLength; i++) {
+    if (playerOneHistory[i] !== playerTwoHistory[i]) {
+      return {
+        roundAgo: i,
+        roundNb: colorsLength - i,
+        one: playerOneHistory[i],
+        two: playerTwoHistory[i],
+      }
+    }
+  }
+
+  // If no diff, returns null
+  return null;
+}

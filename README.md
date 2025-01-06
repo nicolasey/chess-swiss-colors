@@ -1,15 +1,18 @@
 # chess-colors
 
+This library goal is to affect a Pairing with proper colors in all cases, following FIDE swiss system rules.
+
+## Tech Part
+
 To install dependencies:
 
 ```bash
-bun install
+bun add @nicolasey/chess-colors
 ```
 
-To run:
+## How too use
 
-```bash
-bun run index.ts
-```
 
-This project was created using `bun init` in bun v1.1.39. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Kind reminders
+
+* Random Color is to be physically chosen. Rule of FIDE says that higher ranked Player has to choose randomly the color before round 1. Software expect that the Referee sets the randomColor at tournamentStart
