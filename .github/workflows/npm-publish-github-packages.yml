@@ -13,8 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i
-      - run: bun test
+      - name: Install deps
+        run: bun i
+      - name: Run tests
+        run: bun test
 
   publish-gpr:
     needs: build
@@ -27,7 +29,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           registry-url: https://npm.pkg.github.com/
-      - run: bun i
-      - run: bun publish
+      - name: Install deps
+        run: bun i
+      - name: Publish package
+        run: bun publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLISH_TOKEN}}
