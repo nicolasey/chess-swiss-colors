@@ -1,4 +1,4 @@
-import type { PlayerColorState, ColorAssignment } from "./colors";
+import type { PlayerColorState, ColorAssignment, ColorDiff } from "./colors";
 import { ColorPreference } from "./color-preference.enum";
 import { Color } from "./color.enum";
 import { evaluateColorHistory } from './color-compare';
@@ -12,7 +12,7 @@ import { evaluateColorHistory } from './color-compare';
  * @param isLastRound boolean (defaults to false) In some systems, absolute color can be bypass if last round && topPlayer
  * @returns ColorAssignment
  */
-export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColorState, randomColor: Color) {
+export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColorState, randomColor: Color): ColorAssignment {
   const hasSamePreference = playerOne.colorPreference === playerTwo.colorPreference;
   const hasSameLevel = playerOne.colorPreferenceLevel === playerTwo.colorPreferenceLevel;
   const oneHasNoPreference = playerOne.colorPreference === null;
@@ -22,14 +22,13 @@ export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColor
   if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
   if (hasSamePreference && !hasSameLevel) return assignColorsMostAsked(playerOne, playerTwo); // E2
 
-  // @todo samePref sameLevel cases
+  // If same preference, and same level, then we compare color history
   const compare = evaluateColorHistory(playerOne.colorHistory, playerTwo.colorHistory);
 
-  if (compare !== null) {}
-  // find a diff in color history and assign colors using this
-  // skip byes as if it does not even exist
+  // If compare detects a difference in thoseplayers color history, then use diff to assign colors
+  if (compare !== null) return assignWithCompare(playerOne, playerTwo, compare);
 
-  // if === then give expected color to player with highest (score, pairingNb) as fallback
+  // finally, if everything is === then give expected color to player with highest (score, pairingNb) as fallback
   return giveColorToHighestPlayer(playerOne, playerTwo);
 }
 
@@ -104,5 +103,12 @@ function giveColorToHighestPlayer(playerOne: PlayerColorState, playerTwo: Player
   } : {
     white: (playerTwo.colorPreference === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
     black: (playerTwo.colorPreference === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
+  }
+}
+
+function assignWithCompare(playerOne: PlayerColorState, playerTwo: PlayerColorState, compare: ColorDiff): ColorAssignment {
+  return {
+    white: (compare.one === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
+    black: (compare.one === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
   }
 }

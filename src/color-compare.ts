@@ -14,6 +14,8 @@ export function evaluateColorHistory(playerOneHistory: Color[], playerTwoHistory
   playerTwoHistory.reverse();
 
   // @todo check if BYE counts in history eval
+  playerOneHistory = eliminateByesFromHistory(playerOneHistory);
+  playerTwoHistory = eliminateByesFromHistory(playerTwoHistory);
 
   const colorsLength = Math.min(playerOneHistory.length, playerTwoHistory.length);
   for (let i = 0; i < colorsLength; i++) {
@@ -29,4 +31,12 @@ export function evaluateColorHistory(playerOneHistory: Color[], playerTwoHistory
 
   // If no diff, returns null
   return null;
+}
+
+export function eliminateByesFromHistory(history: Color[]): Color[] {
+  let withoutByes: Color[] = [];
+  history.map(color => {
+    if (color !== Color.BYE) withoutByes.push(color)
+  });
+  return withoutByes;
 }
