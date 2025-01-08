@@ -46,6 +46,16 @@ test("when_same_preference_diff_level", () => {
   expect(result.white).toBe(playerOne.playerId);
 });
 
+test("when_same_preference_diff_level_second", () => {
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerTwo = createPlayerSample(2, 0, Color.BLACK, ColorPreference.LOW);
+
+  const result = assignColors(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.black).toBe(playerOne.playerId);
+  expect(result.white).toBe(playerTwo.playerId);
+});
+
 test("when_same", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(2, 0, Color.BLACK, ColorPreference.HIGH);
