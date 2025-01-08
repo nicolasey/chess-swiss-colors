@@ -14,7 +14,8 @@ bun add @nicolasey/chess-colors
 
 - Color State calculator: give this `getColorPreference` a color history, and it will tell you what is the preferred color, and
 what level of preference should be applied for this player
-- Color Assigner: depending on 2 players color states, returns proper colors for given Pair 
+- Color Assigner: depending on 2 players color states, returns proper colors for given Pair
+- Top Player checker: provides a check to identify whether a Player is a top player according to FIDE rules
 
 
 ## Kind reminders
