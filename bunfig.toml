@@ -3,4 +3,4 @@
 coverage = true
 
 [install.scopes]
-"@nicolasey" = { token = "$GITHUB_PUBLISH", url = "https://npm.pkg.github.com" }
+"@nicolasey" = { token = "$GITHUB_PUBLISHER", url = "https://npm.pkg.github.com" }
