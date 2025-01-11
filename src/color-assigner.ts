@@ -1,4 +1,4 @@
-import type { PlayerColorState, ColorAssignment, ColorDiff } from "./colors";
+import type { PlayerColorState, ColorAssignment, ColorDiff } from "../colors.types";
 import { ColorPreference } from "./color-preference.enum";
 import { Color } from "./color.enum";
 import { evaluateColorHistory } from './color-compare';

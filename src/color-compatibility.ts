@@ -1,5 +1,5 @@
 import { ColorPreference } from "./color-preference.enum";
-import type { PlayerColorState } from "./colors";
+import type { PlayerColorState } from "../colors.types";
 
 /**
  * Two players are compatible if both have not: same color preference AND absolute preference level

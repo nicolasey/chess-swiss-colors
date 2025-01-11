@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { Color, ColorPreference, getColorPreference, getOppositeColor } from "../src";
+import { Color, ColorPreference, getColorPreference, getOppositeColor } from "../index";
 
 test("when_nothing_happened", () => {
   const result = getColorPreference([]);

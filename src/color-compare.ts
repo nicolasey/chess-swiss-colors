@@ -1,4 +1,4 @@
-import type { ColorDiff } from "./colors";
+import type { ColorDiff } from "../colors.types";
 import { Color } from "./color.enum";
 
 /**

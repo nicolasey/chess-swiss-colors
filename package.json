@@ -1,6 +1,6 @@
 {
   "name": "@nicolasey/chess-colors",
-  "module": "src/index.ts",
+  "module": "index.ts",
   "type": "module",
   "version": "0.1.3",
   "repository": {

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { isColorCompatible, Color, ColorPreference, type PlayerColorState } from "../src";
+import { isColorCompatible, Color, ColorPreference, type PlayerColorState } from "../index";
 
 test("when_compatible", () => {});
 

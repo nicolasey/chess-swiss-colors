@@ -1,4 +1,4 @@
-import type { PlayerColorState } from "./colors";
+import type { PlayerColorState } from "../colors.types";
 
 /**
  * Checks if a Player is a top player

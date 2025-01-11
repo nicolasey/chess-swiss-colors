@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { assignColors, Color, ColorPreference, type PlayerColorState } from "../src";
+import { assignColors, Color, ColorPreference, type PlayerColorState } from "../index";
 import { faker } from "@faker-js/faker";
 
 const createPlayerSample = (

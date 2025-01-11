@@ -1,3 +1,6 @@
+import { ColorPreference } from "./src/color-preference.enum";
+import { Color } from "./src/color.enum";
+
 export type PlayerId = string | number;
 
 export type ColorAssignment = {

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { faker } from '@faker-js/faker';
-import { Color, ColorPreference, type PlayerColorState } from "../src";
+import { Color, ColorPreference, type PlayerColorState } from "../index";
 import { isTopPlayer } from '../src/top-player';
 
 const createPlayerSample = (score: number, roundNb: number): PlayerColorState => ({

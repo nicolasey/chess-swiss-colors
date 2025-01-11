@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { Color, evaluateColorHistory } from "../src";
+import { Color, evaluateColorHistory } from "../index";
 
 test("compare_simple_history", () => {
   const oneHistory: Color[] = [Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK];
