@@ -9,14 +9,19 @@ export type ColorAssignment = {
 }
 
 export type PlayerColorState = {
+  // Necessary fields to perform color state evaluation
   playerId: PlayerId;
   pairingNb: number;
   score: number;
   roundNb: number;
 
+  // Color State
   colorPreference: Color;
   colorPreferenceLevel: ColorPreference;
-  colorHistory: Color[];
+}
+
+export type ColorHistoryContract = {
+  color: Color;
 }
 
 export type ColorDiff = {
