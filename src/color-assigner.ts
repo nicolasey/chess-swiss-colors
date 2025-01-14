@@ -23,7 +23,7 @@ export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColor
   if (hasSamePreference && !hasSameLevel) return assignColorsMostAsked(playerOne, playerTwo); // E2
 
   // If same preference, and same level, then we compare color history
-  const compare = evaluateColorHistory(playerOne.colorHistory, playerTwo.colorHistory);
+  const compare = evaluateColorHistory(playerOne.history, playerTwo.history);
 
   // If compare detects a difference in thoseplayers color history, then use diff to assign colors
   if (compare !== null) return assignWithCompare(playerOne, playerTwo, compare);
