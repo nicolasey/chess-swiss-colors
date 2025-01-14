@@ -1,4 +1,4 @@
-import type { ColorDiff } from "../colors.types";
+import type { ColorDiff, ColorHistoryContract } from "../colors.types";
 import { Color } from "./color.enum";
 
 /**
@@ -9,22 +9,25 @@ import { Color } from "./color.enum";
  * @param playerTwoHistory Item[]
  * @returns ColorDiff | null
  */
-export function evaluateColorHistory(playerOneHistory: Color[], playerTwoHistory: Color[]): ColorDiff | null {
-  playerOneHistory.reverse();
-  playerTwoHistory.reverse();
+export function evaluateColorHistory(playerOneHistory: ColorHistoryContract[], playerTwoHistory: ColorHistoryContract[]): ColorDiff | null {
+  let oneColors: Color[] = [];
+  let twoColors: Color[] = [];
+  
+  playerOneHistory.reverse().map(h => oneColors.push(h.color));
+  playerTwoHistory.reverse().map(h => twoColors.push(h.color));
 
   // @todo check if BYE counts in history eval
-  playerOneHistory = eliminateByesFromHistory(playerOneHistory);
-  playerTwoHistory = eliminateByesFromHistory(playerTwoHistory);
+  oneColors = eliminateByesFromHistory(oneColors);
+  twoColors = eliminateByesFromHistory(twoColors);
 
-  const colorsLength = Math.min(playerOneHistory.length, playerTwoHistory.length);
+  const colorsLength = Math.min(oneColors.length, twoColors.length);
   for (let i = 0; i < colorsLength; i++) {
-    if (playerOneHistory[i] !== playerTwoHistory[i]) {
+    if (oneColors[i] !== twoColors[i]) {
       return {
         roundAgo: i,
         roundNb: colorsLength - i,
-        one: playerOneHistory[i],
-        two: playerTwoHistory[i],
+        one: oneColors[i],
+        two: twoColors[i],
       }
     }
   }

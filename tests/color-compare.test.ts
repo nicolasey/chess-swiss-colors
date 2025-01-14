@@ -20,6 +20,7 @@ test("compare_simple_history", () => {
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
 
+  console.log("Result = ", result);
   expect(result?.one).toEqual(Color.WHITE);
   expect(result?.two).toEqual(Color.BLACK);
   expect(result?.roundAgo).toEqual(3);
