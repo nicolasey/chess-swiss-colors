@@ -18,6 +18,9 @@ export type PlayerColorState = {
   // Color State
   colorPreference: Color;
   colorPreferenceLevel: ColorPreference;
+
+  // History must have color field in
+  history: ColorHistoryContract[];
 }
 
 export type ColorHistoryContract = {
