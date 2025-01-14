@@ -36,3 +36,7 @@ export type ColorDiff = {
   one: Color;
   two: Color;
 }
+
+export type TournamentColor = {
+  randomColor: Color | null;
+}
