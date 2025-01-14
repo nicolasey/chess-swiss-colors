@@ -1,9 +1,22 @@
 import { expect, test } from "bun:test";
-import { Color, evaluateColorHistory } from "../index";
+import { Color, evaluateColorHistory, type ColorHistoryContract } from "../index";
 
 test("compare_simple_history", () => {
-  const oneHistory: Color[] = [Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK];
-  const twoHistory: Color[] = [Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK];
+  const oneHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+  ]
+
+  const twoHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+  ]
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
 
@@ -14,8 +27,21 @@ test("compare_simple_history", () => {
 });
 
 test("compare_same_history", () => {
-  const oneHistory: Color[] = [Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK];
-  const twoHistory: Color[] = [Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK];
+  const oneHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+  ];
+
+  const twoHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+  ];
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
   expect(result).toBeNull();
@@ -24,8 +50,8 @@ test("compare_same_history", () => {
 test("compare_history_with_byes", () => {})
 
 test("compare_no_history", () => {
-  const oneHistory: Color[] = [];
-  const twoHistory: Color[] = [];
+  const oneHistory: ColorHistoryContract[] = [];
+  const twoHistory: ColorHistoryContract[] = [];
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
   expect(result).toBeNull();

@@ -13,7 +13,7 @@ const createPlayerSample = (
   roundNb: 1,
   colorPreference,
   colorPreferenceLevel,
-  colorHistory: [],
+  history: [],
 });
 
 test("when_no_preference", () => {
@@ -81,8 +81,18 @@ test("when_same_absolute_diff_color_history", () => {
   let playerOne = createPlayerSample(1, 0.5, Color.BLACK, ColorPreference.ABSOLUTE);
   let playerTwo = createPlayerSample(2, 0.5, Color.BLACK, ColorPreference.ABSOLUTE);
 
-  playerOne.colorHistory = [Color.WHITE, Color.BLACK, Color.WHITE, Color.WHITE];
-  playerTwo.colorHistory = [Color.BLACK, Color.BLACK, Color.WHITE, Color.WHITE];
+  playerOne.history = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.BYE },
+    { color: Color.WHITE }
+  ];
+  playerTwo.history = [
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE }
+  ]
 
   const result = assignColors(playerOne, playerTwo, Color.BLACK);
 

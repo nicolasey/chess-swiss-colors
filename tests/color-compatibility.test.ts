@@ -12,7 +12,7 @@ test("same_color_only_one_absolute", () => {
     score: 3,
     colorPreference: color,
     colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    colorHistory: []
+    history: []
   }
   const playerTwo: PlayerColorState = {
     playerId: 2,
@@ -21,7 +21,7 @@ test("same_color_only_one_absolute", () => {
     score: 3,
     colorPreference: color,
     colorPreferenceLevel: ColorPreference.HIGH,
-    colorHistory: []
+    history: []
   }
 
   const result = isColorCompatible(playerOne, playerTwo);
@@ -38,7 +38,7 @@ test("when_incompatible", () => {
     score: 3,
     colorPreference: color,
     colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    colorHistory: []
+    history: []
   }
   const playerTwo: PlayerColorState = {
     playerId: 2,
@@ -47,7 +47,7 @@ test("when_incompatible", () => {
     score: 3,
     colorPreference: color,
     colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    colorHistory: []
+    history: []
   }
 
   const result = isColorCompatible(playerOne, playerTwo);
