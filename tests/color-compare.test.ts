@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { Color, evaluateColorHistory, type ColorHistoryContract } from "../index";
+import { Color, eliminateByesFromHistory, evaluateColorHistory, type ColorHistoryContract } from "../index";
 
 test("compare_simple_history", () => {
   const oneHistory: ColorHistoryContract[] = [
@@ -55,4 +55,35 @@ test("compare_no_history", () => {
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
   expect(result).toBeNull();
+});
+
+test("eliminate_byes_from_history", () => {
+  const oneHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE },
+    { color: Color.BYE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+  ];
+
+  const twoHistory: ColorHistoryContract[] = [
+    { color: Color.BLACK },
+    { color: Color.WHITE },
+    { color: Color.WHITE },
+    { color: Color.BLACK },
+    { color: Color.BLACK },
+    { color: Color.BYE },
+  ];
+
+  let oneColors: Color[] = [];
+  oneHistory.forEach(h =>  oneColors.push(h.color));
+  let twoColors: Color[] = [];
+  twoHistory.forEach(h =>  twoColors.push(h.color));
+
+  const one = eliminateByesFromHistory(oneColors);
+  const two = eliminateByesFromHistory(twoColors);
+
+  expect(one).toEqual([Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK]);
+  expect(two).toEqual([Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK]);
 });
