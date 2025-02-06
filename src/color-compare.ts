@@ -4,17 +4,20 @@ import { Color } from "./color.enum";
 /**
  * Return first line with a difference, from PlayerCard histories
  * Returns null if history is the same
- * 
+ *
  * @param playerOneHistory Item[]
  * @param playerTwoHistory Item[]
  * @returns ColorDiff | null
  */
-export function evaluateColorHistory(playerOneHistory: ColorHistoryContract[], playerTwoHistory: ColorHistoryContract[]): ColorDiff | null {
+export function evaluateColorHistory(
+  playerOneHistory: ColorHistoryContract[],
+  playerTwoHistory: ColorHistoryContract[],
+): ColorDiff | null {
   let oneColors: Color[] = [];
   let twoColors: Color[] = [];
-  
-  playerOneHistory.reverse().map(h => oneColors.push(h.color));
-  playerTwoHistory.reverse().map(h => twoColors.push(h.color));
+
+  playerOneHistory.reverse().map((h) => oneColors.push(h.color));
+  playerTwoHistory.reverse().map((h) => twoColors.push(h.color));
 
   // @todo check if BYE counts in history eval
   oneColors = eliminateByesFromHistory(oneColors);
@@ -25,10 +28,9 @@ export function evaluateColorHistory(playerOneHistory: ColorHistoryContract[], p
     if (oneColors[i] !== twoColors[i]) {
       return {
         roundAgo: i,
-        roundNb: colorsLength - i,
         one: oneColors[i],
         two: twoColors[i],
-      }
+      };
     }
   }
 
@@ -38,8 +40,8 @@ export function evaluateColorHistory(playerOneHistory: ColorHistoryContract[], p
 
 export function eliminateByesFromHistory(history: Color[]): Color[] {
   let withoutByes: Color[] = [];
-  history.map(color => {
-    if (color !== Color.BYE) withoutByes.push(color)
+  history.map((color) => {
+    if (color !== Color.BYE) withoutByes.push(color);
   });
   return withoutByes;
 }
