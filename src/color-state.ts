@@ -1,10 +1,6 @@
+import type { ColorState } from "../colors.types";
 import { ColorPreference } from "./color-preference.enum";
 import { Color, getOppositeColor } from "./color.enum";
-
-export type ColorState = {
-  colorPreference: Color | null;
-  colorPreferenceLevel: ColorPreference | null;
-};
 
 export function getColorPreference(colorHistory: Color[]): ColorState {
   const white = colorHistory.filter((item) => item === Color.WHITE).length;

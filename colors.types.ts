@@ -8,6 +8,11 @@ export type ColorAssignment = {
   black: PlayerId;
 };
 
+export type ColorState = {
+  colorPreference: Color;
+  colorPreferenceLevel: ColorPreference;
+};
+
 export type PlayerColorState = {
   // Necessary fields to perform color state evaluation
   playerId: PlayerId;
