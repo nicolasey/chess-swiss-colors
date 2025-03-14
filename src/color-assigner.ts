@@ -1,26 +1,39 @@
-import type { PlayerColorState, ColorAssignment, ColorDiff } from "../colors.types";
+import type {
+  PlayerColorState,
+  ColorAssignment,
+  ColorDiff,
+} from "../colors.types";
 import { ColorPreference } from "./color-preference.enum";
 import { Color } from "./color.enum";
-import { evaluateColorHistory } from './color-compare';
+import { evaluateColorHistory } from "./color-compare";
 
 /**
  * Give a pair proper colors
- * 
+ *
  * @param playerOne PlayerColorState
  * @param playerTwo PlayerColorState
  * @param randomColor Color | Color chosen before round 1 as player 1 random start color
  * @param isLastRound boolean (defaults to false) In some systems, absolute color can be bypass if last round && topPlayer
  * @returns ColorAssignment
  */
-export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColorState, randomColor: Color): ColorAssignment {
-  const hasSamePreference = playerOne.colorPreference === playerTwo.colorPreference;
-  const hasSameLevel = playerOne.colorPreferenceLevel === playerTwo.colorPreferenceLevel;
-  const oneHasNoPreference = playerOne.colorPreference === null;
-  const oneHasAbsolutePreference = playerOne.colorPreferenceLevel === ColorPreference.ABSOLUTE;
+export function assignColors(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+  randomColor: Color,
+): ColorAssignment {
+  const hasSamePreference =
+    playerOne.colorPreference === playerTwo.colorPreference;
+  const hasSameLevel =
+    playerOne.colorPreferenceLevel === playerTwo.colorPreferenceLevel;
+  const oneHasNoPreference = playerOne.colorPreference === Color.BYE;
+  const oneHasAbsolutePreference =
+    playerOne.colorPreferenceLevel === ColorPreference.ABSOLUTE;
 
-  if (hasSamePreference && oneHasNoPreference) return assignColorNoPref(playerOne, playerTwo, randomColor); // START
+  if (hasSamePreference && oneHasNoPreference)
+    return assignColorNoPref(playerOne, playerTwo, randomColor); // START
   if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
-  if (hasSamePreference && !hasSameLevel) return assignColorsMostAsked(playerOne, playerTwo); // E2
+  if (hasSamePreference && !hasSameLevel)
+    return assignColorsMostAsked(playerOne, playerTwo); // E2
 
   // If same preference, and same level, then we compare color history
   const compare = evaluateColorHistory(playerOne.history, playerTwo.history);
@@ -35,80 +48,137 @@ export function assignColors(playerOne: PlayerColorState, playerTwo: PlayerColor
 function assignColorNoPref(
   playerOne: PlayerColorState,
   playerTwo: PlayerColorState,
-  randomColor: Color): ColorAssignment {
+  randomColor: Color,
+): ColorAssignment {
   /**
    * Check if pairing numbers are set
    */
   if (!playerOne.pairingNb || !playerTwo.pairingNb) {
-    throw new Error("Pairing numbers required !")
+    throw new Error("Pairing numbers required !");
   }
 
-  const oneIsHigherRanked = (playerOne.pairingNb < playerTwo.pairingNb);
+  const oneIsHigherRanked = playerOne.pairingNb < playerTwo.pairingNb;
   const oneIsEven = isEven(playerOne.pairingNb);
   const twoIsEven = isEven(playerTwo.pairingNb);
 
-  return (oneIsHigherRanked) ?
-    { 
-      white: (oneIsEven && randomColor === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
-      black: (oneIsEven && randomColor === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
-    } : { 
-      white: (twoIsEven && randomColor === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
-      black: (twoIsEven && randomColor === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
-    };
+  return oneIsHigherRanked
+    ? {
+        white:
+          oneIsEven && randomColor === Color.BLACK
+            ? playerOne.playerId
+            : playerTwo.playerId,
+        black:
+          oneIsEven && randomColor === Color.BLACK
+            ? playerTwo.playerId
+            : playerOne.playerId,
+      }
+    : {
+        white:
+          twoIsEven && randomColor === Color.BLACK
+            ? playerTwo.playerId
+            : playerOne.playerId,
+        black:
+          twoIsEven && randomColor === Color.BLACK
+            ? playerOne.playerId
+            : playerTwo.playerId,
+      };
 }
 
-function assignColorDiffPref(playerOne: PlayerColorState, playerTwo: PlayerColorState): ColorAssignment {
-  return (playerOne.colorPreference === Color.BLACK) ?
-    { white: playerTwo.playerId, black: playerOne.playerId } : 
-    { white: playerOne.playerId, black: playerTwo.playerId };
+function assignColorDiffPref(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+): ColorAssignment {
+  return playerOne.colorPreference === Color.BLACK
+    ? { white: playerTwo.playerId, black: playerOne.playerId }
+    : { white: playerOne.playerId, black: playerTwo.playerId };
 }
 
-function assignColorsMostAsked(playerOne: PlayerColorState, playerTwo: PlayerColorState): ColorAssignment {
-  const oneIsPrior = playerOne.colorPreferenceLevel > playerTwo.colorPreferenceLevel;
-  return (oneIsPrior) ? 
-    {
-      white: (playerOne.colorPreference === Color.WHITE) ? playerOne.playerId : playerTwo.playerId,
-      black: (playerOne.colorPreference === Color.WHITE) ? playerTwo.playerId : playerOne.playerId,
-    } : {
-      white: (playerTwo.colorPreference === Color.WHITE) ? playerTwo.playerId : playerOne.playerId,
-      black: (playerTwo.colorPreference === Color.WHITE) ? playerOne.playerId : playerTwo.playerId,
-    }
+function assignColorsMostAsked(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+): ColorAssignment {
+  const oneIsPrior =
+    playerOne.colorPreferenceLevel > playerTwo.colorPreferenceLevel;
+  return oneIsPrior
+    ? {
+        white:
+          playerOne.colorPreference === Color.WHITE
+            ? playerOne.playerId
+            : playerTwo.playerId,
+        black:
+          playerOne.colorPreference === Color.WHITE
+            ? playerTwo.playerId
+            : playerOne.playerId,
+      }
+    : {
+        white:
+          playerTwo.colorPreference === Color.WHITE
+            ? playerTwo.playerId
+            : playerOne.playerId,
+        black:
+          playerTwo.colorPreference === Color.WHITE
+            ? playerOne.playerId
+            : playerTwo.playerId,
+      };
 }
 
 function isEven(integer: number): boolean {
-  return integer % 2 === 0
+  return integer % 2 === 0;
 }
 
 /**
  * Affect colors depending on Player rank
- * 
+ *
  * @param playerOne PlayerColorState
  * @param playerTwo PlayerColorState
  * @returns ColorAssignment
  */
-function giveColorToHighestPlayer(playerOne: PlayerColorState, playerTwo: PlayerColorState): ColorAssignment {
+function giveColorToHighestPlayer(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+): ColorAssignment {
   // Sort players by score and pairingNb, identify first
   const highRankPlayer: PlayerColorState = [playerOne, playerTwo].sort(
-    (a, b) => b.score - a.score || a.pairingNb - b.pairingNb)
-    [0];
+    (a, b) => b.score - a.score || a.pairingNb - b.pairingNb,
+  )[0];
 
-  const isPlayerOne = (highRankPlayer.playerId === playerOne.playerId);
-  
+  const isPlayerOne = highRankPlayer.playerId === playerOne.playerId;
+
   /**
    * We return color expected from highRankPlayer, depending on what player it is
    */
-  return (isPlayerOne) ? {
-    white: (playerOne.colorPreference === Color.WHITE) ? playerOne.playerId : playerTwo.playerId,
-    black: (playerOne.colorPreference === Color.WHITE) ? playerTwo.playerId : playerOne.playerId,
-  } : {
-    white: (playerTwo.colorPreference === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
-    black: (playerTwo.colorPreference === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
-  }
+  return isPlayerOne
+    ? {
+        white:
+          playerOne.colorPreference === Color.WHITE
+            ? playerOne.playerId
+            : playerTwo.playerId,
+        black:
+          playerOne.colorPreference === Color.WHITE
+            ? playerTwo.playerId
+            : playerOne.playerId,
+      }
+    : {
+        white:
+          playerTwo.colorPreference === Color.BLACK
+            ? playerOne.playerId
+            : playerTwo.playerId,
+        black:
+          playerTwo.colorPreference === Color.BLACK
+            ? playerTwo.playerId
+            : playerOne.playerId,
+      };
 }
 
-function assignWithCompare(playerOne: PlayerColorState, playerTwo: PlayerColorState, compare: ColorDiff): ColorAssignment {
+function assignWithCompare(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+  compare: ColorDiff,
+): ColorAssignment {
   return {
-    white: (compare.one === Color.BLACK) ? playerOne.playerId : playerTwo.playerId,
-    black: (compare.one === Color.BLACK) ? playerTwo.playerId : playerOne.playerId,
-  }
+    white:
+      compare.one === Color.BLACK ? playerOne.playerId : playerTwo.playerId,
+    black:
+      compare.one === Color.BLACK ? playerTwo.playerId : playerOne.playerId,
+  };
 }

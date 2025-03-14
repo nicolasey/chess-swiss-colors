@@ -12,5 +12,7 @@ import type { PlayerColorState } from "../colors.types";
  */
 export function isTopPlayer(player: PlayerColorState): boolean {
   const half = player.history.length / 2;
+  console.log("Player score:", player.score);
+  console.log("Half:", half);
   return player.score > half;
 }

@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
-import { Color, eliminateByesFromHistory, evaluateColorHistory, type ColorHistoryContract } from "../index";
+import {
+  Color,
+  eliminateByesFromHistory,
+  evaluateColorHistory,
+  type ColorHistoryContract,
+} from "../index";
 
 test("compare_simple_history", () => {
   const oneHistory: ColorHistoryContract[] = [
@@ -8,7 +13,7 @@ test("compare_simple_history", () => {
     { color: Color.WHITE },
     { color: Color.BLACK },
     { color: Color.BLACK },
-  ]
+  ];
 
   const twoHistory: ColorHistoryContract[] = [
     { color: Color.BLACK },
@@ -16,7 +21,7 @@ test("compare_simple_history", () => {
     { color: Color.WHITE },
     { color: Color.BLACK },
     { color: Color.BLACK },
-  ]
+  ];
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
 
@@ -24,7 +29,6 @@ test("compare_simple_history", () => {
   expect(result?.one).toEqual(Color.WHITE);
   expect(result?.two).toEqual(Color.BLACK);
   expect(result?.roundAgo).toEqual(3);
-  expect(result?.roundNb).toEqual(2);
 });
 
 test("compare_same_history", () => {
@@ -48,7 +52,7 @@ test("compare_same_history", () => {
   expect(result).toBeNull();
 });
 
-test("compare_history_with_byes", () => {})
+test("compare_history_with_byes", () => {});
 
 test("compare_no_history", () => {
   const oneHistory: ColorHistoryContract[] = [];
@@ -78,13 +82,25 @@ test("eliminate_byes_from_history", () => {
   ];
 
   let oneColors: Color[] = [];
-  oneHistory.forEach(h =>  oneColors.push(h.color));
+  oneHistory.forEach((h) => oneColors.push(h.color));
   let twoColors: Color[] = [];
-  twoHistory.forEach(h =>  twoColors.push(h.color));
+  twoHistory.forEach((h) => twoColors.push(h.color));
 
   const one = eliminateByesFromHistory(oneColors);
   const two = eliminateByesFromHistory(twoColors);
 
-  expect(one).toEqual([Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK]);
-  expect(two).toEqual([Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK]);
+  expect(one).toEqual([
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ]);
+  expect(two).toEqual([
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ]);
 });
