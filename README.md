@@ -1,5 +1,7 @@
 # chess-colors
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 This library goal is to affect a Pairing with proper colors in all cases, following FIDE swiss system rules.
 
 ## Tech Part
