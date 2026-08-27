@@ -13,15 +13,13 @@ export function evaluateColorHistory(
   playerOneHistory: ColorHistoryContract[],
   playerTwoHistory: ColorHistoryContract[],
 ): ColorDiff | null {
-  let oneColors: Color[] = [];
-  let twoColors: Color[] = [];
-
-  playerOneHistory.reverse().map((h) => oneColors.push(h.color));
-  playerTwoHistory.reverse().map((h) => twoColors.push(h.color));
-
   // @todo check if BYE counts in history eval
-  oneColors = eliminateByesFromHistory(oneColors);
-  twoColors = eliminateByesFromHistory(twoColors);
+  const oneColors = eliminateByesFromHistory(
+    [...playerOneHistory].reverse().map((h) => h.color),
+  );
+  const twoColors = eliminateByesFromHistory(
+    [...playerTwoHistory].reverse().map((h) => h.color),
+  );
 
   const colorsLength = Math.min(oneColors.length, twoColors.length);
   for (let i = 0; i < colorsLength; i++) {

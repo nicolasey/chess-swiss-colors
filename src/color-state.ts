@@ -27,7 +27,12 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
 
   return {
     colorPreference: white > black ? Color.BLACK : Color.WHITE,
-    colorPreferenceLevel: diff as ColorPreference,
+    // A difference of two or more is already absolute; there is no stronger
+    // degree. OFF_GRID is set explicitly by the caller, never derived here.
+    colorPreferenceLevel: Math.min(
+      diff,
+      ColorPreference.ABSOLUTE,
+    ) as ColorPreference,
   };
 }
 
@@ -40,11 +45,10 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
  * @returns Color
  */
 export function getLastPlayedColor(items: Color[]): Color {
-  if (items.length === 0) return Color.BYE;
-  items = items.reverse();
+  const mostRecentFirst = [...items].reverse();
 
-  for (let index = 0; index < items.length; index++) {
-    if (items[index] !== Color.BYE) return items[index] as Color;
+  for (const color of mostRecentFirst) {
+    if (color !== Color.BYE) return color;
   }
   return Color.BYE;
 }
@@ -60,11 +64,10 @@ export function getLastPlayedColor(items: Color[]): Color {
  * @returns Color | null
  */
 export function getLastTwoColors(items: Color[]): Color[] | null {
-  if (items.length < 2) return null;
+  const colors: Color[] = [];
 
-  let colors = [];
-  for (let index = 0; index < items.length; index++) {
-    if (items[index] !== Color.BYE) colors.push(items[index] as Color);
+  for (const color of [...items].reverse()) {
+    if (color !== Color.BYE) colors.push(color);
     if (colors.length === 2) return colors;
   }
 

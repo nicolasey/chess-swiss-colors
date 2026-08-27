@@ -6,101 +6,119 @@ import {
   type ColorHistoryContract,
 } from "../index";
 
-test("compare_simple_history", () => {
-  const oneHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.WHITE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-  ];
+const asHistory = (...colors: Color[]): ColorHistoryContract[] =>
+  colors.map((color) => ({ color }));
 
-  const twoHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-  ];
+test("compare_simple_history", () => {
+  const oneHistory = asHistory(
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  );
+  const twoHistory = asHistory(
+    Color.BLACK,
+    Color.BLACK,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  );
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
 
-  console.log("Result = ", result);
   expect(result?.one).toEqual(Color.WHITE);
   expect(result?.two).toEqual(Color.BLACK);
   expect(result?.roundAgo).toEqual(3);
 });
 
 test("compare_same_history", () => {
-  const oneHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.WHITE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-  ];
-
-  const twoHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.WHITE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-  ];
+  const oneHistory = asHistory(
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  );
+  const twoHistory = asHistory(
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  );
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
+
   expect(result).toBeNull();
 });
 
-test("compare_history_with_byes", () => {});
-
-test("compare_no_history", () => {
-  const oneHistory: ColorHistoryContract[] = [];
-  const twoHistory: ColorHistoryContract[] = [];
+test("compare_history_with_byes", () => {
+  // Player one's most recent round was a bye. Once byes are stripped the
+  // comparison must align on games played, not on rounds elapsed.
+  const oneHistory = asHistory(Color.BLACK, Color.WHITE, Color.BYE);
+  const twoHistory = asHistory(Color.BLACK, Color.WHITE, Color.WHITE);
 
   const result = evaluateColorHistory(oneHistory, twoHistory);
+
+  expect(result?.one).toEqual(Color.BLACK);
+  expect(result?.two).toEqual(Color.WHITE);
+  expect(result?.roundAgo).toEqual(1);
+});
+
+test("compare_no_history", () => {
+  const result = evaluateColorHistory([], []);
+
   expect(result).toBeNull();
+});
+
+test("compare_histories_of_unequal_length", () => {
+  // Only the overlap is compared; the longer player's extra games are ignored.
+  const oneHistory = asHistory(Color.WHITE);
+  const twoHistory = asHistory(Color.BLACK, Color.BLACK, Color.WHITE);
+
+  expect(evaluateColorHistory(oneHistory, twoHistory)).toBeNull();
+});
+
+test("compare_should_not_mutate_the_histories_it_is_given", () => {
+  const oneHistory = asHistory(Color.BLACK, Color.WHITE, Color.WHITE);
+  const twoHistory = asHistory(Color.WHITE, Color.BLACK, Color.BLACK);
+
+  evaluateColorHistory(oneHistory, twoHistory);
+
+  expect(oneHistory).toEqual(
+    asHistory(Color.BLACK, Color.WHITE, Color.WHITE),
+  );
+  expect(twoHistory).toEqual(
+    asHistory(Color.WHITE, Color.BLACK, Color.BLACK),
+  );
 });
 
 test("eliminate_byes_from_history", () => {
-  const oneHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.WHITE },
-    { color: Color.BYE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-  ];
-
-  const twoHistory: ColorHistoryContract[] = [
-    { color: Color.BLACK },
-    { color: Color.WHITE },
-    { color: Color.WHITE },
-    { color: Color.BLACK },
-    { color: Color.BLACK },
-    { color: Color.BYE },
-  ];
-
-  let oneColors: Color[] = [];
-  oneHistory.forEach((h) => oneColors.push(h.color));
-  let twoColors: Color[] = [];
-  twoHistory.forEach((h) => twoColors.push(h.color));
-
-  const one = eliminateByesFromHistory(oneColors);
-  const two = eliminateByesFromHistory(twoColors);
-
-  expect(one).toEqual([
+  const one = eliminateByesFromHistory([
     Color.BLACK,
     Color.WHITE,
     Color.WHITE,
+    Color.BYE,
     Color.BLACK,
     Color.BLACK,
   ]);
-  expect(two).toEqual([
+  const two = eliminateByesFromHistory([
     Color.BLACK,
     Color.WHITE,
     Color.WHITE,
     Color.BLACK,
     Color.BLACK,
+    Color.BYE,
   ]);
+
+  const expected = [
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ];
+  expect(one).toEqual(expected);
+  expect(two).toEqual(expected);
 });

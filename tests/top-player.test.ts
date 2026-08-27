@@ -1,30 +1,31 @@
 import { expect, test } from "bun:test";
-import { faker } from "@faker-js/faker";
-import { Color, ColorPreference, type PlayerColorState } from "../index";
-import { isTopPlayer } from "../src/top-player";
+import { Color, ColorPreference, isTopPlayer, type PlayerColorState } from "../index";
 
-const createPlayerSample = (score: number): PlayerColorState => ({
-  playerId: faker.number.int({ min: 1, max: 9000 }),
-  pairingNb: faker.number.int({ min: 1, max: 100 }),
+const createPlayerSample = (
+  score: number,
+  rounds = 2,
+): PlayerColorState => ({
+  playerId: 1,
+  pairingNb: 1,
   score,
   colorPreference: Color.WHITE,
   colorPreferenceLevel: ColorPreference.HIGH,
-  history: [
-    {
-      color: Color.WHITE,
-    },
-    {
-      color: Color.BLACK,
-    },
-  ],
+  history: Array.from({ length: rounds }, (_, index) => ({
+    color: index % 2 === 0 ? Color.WHITE : Color.BLACK,
+  })),
 });
 
 test("checks_if_top_player", () => {
-  const player = createPlayerSample(2);
-  const top = isTopPlayer(player);
-  expect(top).toBeTrue();
+  expect(isTopPlayer(createPlayerSample(2))).toBeTrue();
+  expect(isTopPlayer(createPlayerSample(1))).toBeFalse();
+});
 
-  const player2 = createPlayerSample(1);
-  const top2 = isTopPlayer(player2);
-  expect(top2).toBeFalse();
+test("exactly_half_is_not_a_top_player", () => {
+  // "More than half of possible points" is strict.
+  expect(isTopPlayer(createPlayerSample(1.5, 3))).toBeFalse();
+  expect(isTopPlayer(createPlayerSample(2, 3))).toBeTrue();
+});
+
+test("no_rounds_played_is_not_a_top_player", () => {
+  expect(isTopPlayer(createPlayerSample(0, 0))).toBeFalse();
 });
