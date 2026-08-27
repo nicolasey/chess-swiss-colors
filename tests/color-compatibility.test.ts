@@ -6,52 +6,44 @@ import {
   type PlayerColorState,
 } from "../index";
 
-test("when_compatible", () => {});
+const player = (
+  playerId: number,
+  colorPreference: Color,
+  colorPreferenceLevel: ColorPreference,
+): PlayerColorState => ({
+  playerId,
+  pairingNb: playerId,
+  score: 3,
+  colorPreference,
+  colorPreferenceLevel,
+  history: [],
+});
+
+test("when_compatible", () => {
+  // Opposite preferences are always compatible, however strong they are.
+  const playerOne = player(1, Color.WHITE, ColorPreference.ABSOLUTE);
+  const playerTwo = player(2, Color.BLACK, ColorPreference.ABSOLUTE);
+
+  expect(isColorCompatible(playerOne, playerTwo)).toBeTrue();
+  expect(isColorCompatible(playerTwo, playerOne)).toBeTrue();
+});
 
 test("same_color_only_one_absolute", () => {
-  const color = Math.random() < 0.5 ? Color.BLACK : Color.WHITE;
-  const playerOne: PlayerColorState = {
-    playerId: 1,
-    pairingNb: 1,
-    score: 3,
-    colorPreference: color,
-    colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    history: [],
-  };
-  const playerTwo: PlayerColorState = {
-    playerId: 2,
-    pairingNb: 2,
-    score: 3,
-    colorPreference: color,
-    colorPreferenceLevel: ColorPreference.HIGH,
-    history: [],
-  };
+  for (const color of [Color.WHITE, Color.BLACK]) {
+    const playerOne = player(1, color, ColorPreference.ABSOLUTE);
+    const playerTwo = player(2, color, ColorPreference.HIGH);
 
-  const result = isColorCompatible(playerOne, playerTwo);
-
-  expect(result).toBeTrue();
+    expect(isColorCompatible(playerOne, playerTwo)).toBeTrue();
+    expect(isColorCompatible(playerTwo, playerOne)).toBeTrue();
+  }
 });
 
 test("when_incompatible", () => {
-  const color = Math.random() < 0.5 ? Color.BLACK : Color.WHITE;
-  const playerOne: PlayerColorState = {
-    playerId: 1,
-    pairingNb: 1,
-    score: 3,
-    colorPreference: color,
-    colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    history: [],
-  };
-  const playerTwo: PlayerColorState = {
-    playerId: 2,
-    pairingNb: 2,
-    score: 3,
-    colorPreference: color,
-    colorPreferenceLevel: ColorPreference.ABSOLUTE,
-    history: [],
-  };
+  for (const color of [Color.WHITE, Color.BLACK]) {
+    const playerOne = player(1, color, ColorPreference.ABSOLUTE);
+    const playerTwo = player(2, color, ColorPreference.ABSOLUTE);
 
-  const result = isColorCompatible(playerOne, playerTwo);
-
-  expect(result).toBeFalse();
+    expect(isColorCompatible(playerOne, playerTwo)).toBeFalse();
+    expect(isColorCompatible(playerTwo, playerOne)).toBeFalse();
+  }
 });

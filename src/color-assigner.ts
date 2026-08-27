@@ -4,7 +4,7 @@ import type {
   ColorDiff,
 } from "../colors.types";
 import { ColorPreference } from "./color-preference.enum";
-import { Color } from "./color.enum";
+import { Color, getOppositeColor } from "./color.enum";
 import { evaluateColorHistory } from "./color-compare";
 
 /**
@@ -45,43 +45,31 @@ export function assignColors(
   return giveColorToHighestPlayer(playerOne, playerTwo);
 }
 
+/**
+ * FIDE C.04.1 (f)
+ * The higher ranked player of a pair receives the drawn colour when their
+ * pairing number is odd, and the opposite colour when it is even.
+ */
 function assignColorNoPref(
   playerOne: PlayerColorState,
   playerTwo: PlayerColorState,
   randomColor: Color,
 ): ColorAssignment {
-  /**
-   * Check if pairing numbers are set
-   */
   if (!playerOne.pairingNb || !playerTwo.pairingNb) {
     throw new Error("Pairing numbers required !");
   }
 
   const oneIsHigherRanked = playerOne.pairingNb < playerTwo.pairingNb;
-  const oneIsEven = isEven(playerOne.pairingNb);
-  const twoIsEven = isEven(playerTwo.pairingNb);
+  const higher = oneIsHigherRanked ? playerOne : playerTwo;
+  const lower = oneIsHigherRanked ? playerTwo : playerOne;
 
-  return oneIsHigherRanked
-    ? {
-        white:
-          oneIsEven && randomColor === Color.BLACK
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          oneIsEven && randomColor === Color.BLACK
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      }
-    : {
-        white:
-          twoIsEven && randomColor === Color.BLACK
-            ? playerTwo.playerId
-            : playerOne.playerId,
-        black:
-          twoIsEven && randomColor === Color.BLACK
-            ? playerOne.playerId
-            : playerTwo.playerId,
-      };
+  const higherGets = isEven(higher.pairingNb)
+    ? getOppositeColor(randomColor)
+    : randomColor;
+
+  return higherGets === Color.WHITE
+    ? { white: higher.playerId, black: lower.playerId }
+    : { white: lower.playerId, black: higher.playerId };
 }
 
 function assignColorDiffPref(

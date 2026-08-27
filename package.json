@@ -5,16 +5,17 @@
   "version": "0.2.5",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/nicolasey/chess-colors.git"
+    "type": "git",
+    "url": "git+https://github.com/nicolasey/chess-swiss-colors.git"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.3.0",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   }
 }

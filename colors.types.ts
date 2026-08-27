@@ -32,7 +32,8 @@ export type ColorHistoryContract = {
 };
 
 export type ColorDiff = {
-  // Nb rounds ago, starting from last played round
+  // Nb games ago, counted from the most recent game played. Byes are
+  // stripped first, so this is games played, not rounds elapsed.
   roundAgo: number;
 
   // The diff found
