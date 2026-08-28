@@ -318,3 +318,61 @@ test("color_state_feeds_the_assigner", () => {
   expect(result.black).toBe(playerOne.playerId);
   expect(result.white).toBe(playerTwo.playerId);
 });
+
+/**
+ * CA-2 — FIDE C.04.3 art. 1.7.4
+ * A player who has played no games has no colour preference, and their
+ * opponent's preference is granted. Uses `assign`, so CA-8 (order independence)
+ * is asserted alongside. See docs/fide-colour-rules.md.
+ */
+test("CA-2: a_player_with_no_preference_grants_their_opponent_white", () => {
+  const byeOnly = [Color.BYE];
+  const playedBlack = [Color.BLACK];
+
+  const [noPreference, wantsWhite] = createPair(
+    { pairingNb: 7, score: 1, history: byeOnly.map((color) => ({ color })),
+      ...getColorPreference(byeOnly) },
+    { pairingNb: 3, score: 1, history: playedBlack.map((color) => ({ color })),
+      ...getColorPreference(playedBlack) },
+  );
+
+  expect(wantsWhite.colorPreference).toBe(Color.WHITE);
+
+  const result = assign(noPreference, wantsWhite, Color.WHITE);
+
+  expect(result.white).toBe(wantsWhite.playerId);
+  expect(result.black).toBe(noPreference.playerId);
+});
+
+test("CA-2: a_player_with_no_preference_grants_their_opponent_black", () => {
+  const byeOnly = [Color.BYE];
+  const playedWhite = [Color.WHITE];
+
+  const [noPreference, wantsBlack] = createPair(
+    { pairingNb: 7, score: 1, history: byeOnly.map((color) => ({ color })),
+      ...getColorPreference(byeOnly) },
+    { pairingNb: 3, score: 1, history: playedWhite.map((color) => ({ color })),
+      ...getColorPreference(playedWhite) },
+  );
+
+  expect(wantsBlack.colorPreference).toBe(Color.BLACK);
+
+  const result = assign(noPreference, wantsBlack, Color.WHITE);
+
+  expect(result.black).toBe(wantsBlack.playerId);
+  expect(result.white).toBe(noPreference.playerId);
+});
+
+test("CA-2: an_empty_history_also_grants_the_opponent", () => {
+  const playedBlack = [Color.BLACK];
+
+  const [noPreference, wantsWhite] = createPair(
+    { pairingNb: 7, score: 1, history: [], ...getColorPreference([]) },
+    { pairingNb: 3, score: 1, history: playedBlack.map((color) => ({ color })),
+      ...getColorPreference(playedBlack) },
+  );
+
+  const result = assign(noPreference, wantsWhite, Color.WHITE);
+
+  expect(result.white).toBe(wantsWhite.playerId);
+});
