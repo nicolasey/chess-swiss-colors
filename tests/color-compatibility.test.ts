@@ -19,7 +19,7 @@ const player = (
   history: [],
 });
 
-test("when_compatible", () => {
+test("PC-2: when_compatible", () => {
   // Opposite preferences are always compatible, however strong they are.
   const playerOne = player(1, Color.WHITE, ColorPreference.ABSOLUTE);
   const playerTwo = player(2, Color.BLACK, ColorPreference.ABSOLUTE);
@@ -28,7 +28,7 @@ test("when_compatible", () => {
   expect(isColorCompatible(playerTwo, playerOne)).toBeTrue();
 });
 
-test("same_color_only_one_absolute", () => {
+test("PC-3: same_color_only_one_absolute", () => {
   for (const color of [Color.WHITE, Color.BLACK]) {
     const playerOne = player(1, color, ColorPreference.ABSOLUTE);
     const playerTwo = player(2, color, ColorPreference.HIGH);
@@ -38,7 +38,7 @@ test("same_color_only_one_absolute", () => {
   }
 });
 
-test("when_incompatible", () => {
+test("PC-1: when_incompatible", () => {
   for (const color of [Color.WHITE, Color.BLACK]) {
     const playerOne = player(1, color, ColorPreference.ABSOLUTE);
     const playerTwo = player(2, color, ColorPreference.ABSOLUTE);

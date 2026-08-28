@@ -39,7 +39,8 @@ const createPair = (
  * Invariants that must hold for every assignment, on every path:
  *  - the two colours go to two different players
  *  - the players are exactly the two that were passed in
- *  - the outcome does not depend on which player was passed first
+ *  - the outcome does not depend on which player was passed first (CA-8)
+ * The first two are OUT-4.
  */
 const expectValidAssignment = (
   result: ColorAssignment,
@@ -66,7 +67,7 @@ const assign = (
   return result;
 };
 
-test("when_no_preference", () => {
+test("CA-7: when_no_preference", () => {
   const playerOne = createPlayerSample(1, 0, Color.BYE, ColorPreference.LOW);
   const playerTwo = createPlayerSample(
     2,
@@ -83,10 +84,10 @@ test("when_no_preference", () => {
 });
 
 /**
- * FIDE C.04.1 (f): the higher ranked player of a pair receives the drawn
- * colour when their pairing number is odd, the opposite when it is even.
+ * CA-7 — FIDE C.04.3 art. 5.2.5: the higher ranked player of a pair receives
+ * the initial-colour when their TPN is odd, the opposite when it is even.
  */
-test("round_one_gives_the_drawn_colour_by_pairing_parity", () => {
+test("CA-7: round_one_gives_the_drawn_colour_by_pairing_parity", () => {
   const cases: Array<[Color, number, number]> = [
     [Color.BLACK, 1, 2],
     [Color.BLACK, 2, 3],
@@ -144,7 +145,7 @@ test("round_one_requires_pairing_numbers", () => {
   );
 });
 
-test("when_diff_preference", () => {
+test("CA-1: when_diff_preference", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(
     2,
@@ -160,7 +161,7 @@ test("when_diff_preference", () => {
   expect(result.white).toBe(playerTwo.playerId);
 });
 
-test("when_same_preference_diff_level", () => {
+test("CA-3: when_same_preference_diff_level", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(
     2,
@@ -176,7 +177,7 @@ test("when_same_preference_diff_level", () => {
   expect(result.white).toBe(playerOne.playerId);
 });
 
-test("when_same_preference_diff_level_second", () => {
+test("CA-3: when_same_preference_diff_level_second", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(
     2,
@@ -192,7 +193,7 @@ test("when_same_preference_diff_level_second", () => {
   expect(result.white).toBe(playerTwo.playerId);
 });
 
-test("when_same", () => {
+test("CA-6: when_same", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(
     2,
@@ -208,7 +209,7 @@ test("when_same", () => {
   expect(result.white).toBe(playerTwo.playerId);
 });
 
-test("when_same_but_score_diff", () => {
+test("CA-6: when_same_but_score_diff", () => {
   const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
   const playerTwo = createPlayerSample(
     2,
@@ -224,38 +225,77 @@ test("when_same_but_score_diff", () => {
   expect(result.white).toBe(playerOne.playerId);
 });
 
-test("when_same_absolute_diff_color_history", () => {
+/**
+ * CA-5 — FIDE C.04.3 art. 5.2.3
+ * Same preference, same strength: alternate from the most recent game in which
+ * the two held different colours. playerOne had White there, so playerOne takes
+ * Black now.
+ *
+ * playerTwo is deliberately the higher ranked of the pair, so CA-6 would give
+ * the opposite answer. If this pair ever stops reaching 5.2.3 the assertion
+ * fails, instead of passing for the wrong reason as its predecessor did.
+ */
+test("CA-5: alternates_from_the_most_recent_differing_game", () => {
+  const oneHistory = [Color.WHITE, Color.BLACK, Color.WHITE];
+  const twoHistory = [Color.WHITE, Color.WHITE, Color.BLACK];
+
   const [playerOne, playerTwo] = createPair(
     {
-      pairingNb: 1,
-      score: 0.5,
-      colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.ABSOLUTE,
-      history: [
-        { color: Color.BLACK },
-        { color: Color.WHITE },
-        { color: Color.BYE },
-        { color: Color.WHITE },
-      ],
+      pairingNb: 2,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
     },
     {
-      pairingNb: 2,
-      score: 0.5,
-      colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.ABSOLUTE,
-      history: [
-        { color: Color.BLACK },
-        { color: Color.BLACK },
-        { color: Color.WHITE },
-        { color: Color.WHITE },
-      ],
+      pairingNb: 1,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
     },
   );
 
+  // Guard the premise: 5.2.3 is only reached when 5.2.1 and 5.2.2 cannot decide.
+  expect(playerOne.colorPreference).toBe(playerTwo.colorPreference);
+  expect(playerOne.colorPreferenceLevel).toBe(playerTwo.colorPreferenceLevel);
+
   const result = assign(playerOne, playerTwo, Color.BLACK);
 
-  expect(result.black).toBe(playerOne.playerId);
   expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+/**
+ * CA-5 — bye alignment is this library's reading, not FIDE's. Art. 5.2.3 says
+ * "the most recent time" the two held different colours and is silent on
+ * unplayed rounds; src/color-compare.ts strips byes per player and compares by
+ * games played. This pins that choice so changing it has to be deliberate.
+ */
+test("CA-5: byes_are_stripped_per_player_before_comparing", () => {
+  const oneHistory = [Color.WHITE, Color.BYE, Color.BLACK, Color.WHITE];
+  const twoHistory = [Color.WHITE, Color.WHITE, Color.BLACK];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 2,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 1,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  expect(playerOne.colorPreference).toBe(playerTwo.colorPreference);
+  expect(playerOne.colorPreferenceLevel).toBe(playerTwo.colorPreferenceLevel);
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
 });
 
 test("it_should_not_mutate_the_players_it_is_given", () => {
@@ -288,7 +328,7 @@ test("it_should_not_mutate_the_players_it_is_given", () => {
  * getColorPreference feeds assignColors in real use. Test the seam, not just
  * the two ends of it.
  */
-test("color_state_feeds_the_assigner", () => {
+test("CA-1: color_state_feeds_the_assigner", () => {
   const oneHistory = [Color.WHITE, Color.BLACK, Color.WHITE];
   const twoHistory = [Color.BLACK, Color.WHITE, Color.BLACK];
 
@@ -317,4 +357,122 @@ test("color_state_feeds_the_assigner", () => {
 
   expect(result.black).toBe(playerOne.playerId);
   expect(result.white).toBe(playerTwo.playerId);
+});
+
+/**
+ * CA-2 — FIDE C.04.3 art. 1.7.4
+ * A player who has played no games has no colour preference, and their
+ * opponent's preference is granted. Uses `assign`, so CA-8 (order independence)
+ * is asserted alongside. See docs/fide-colour-rules.md.
+ */
+test("CA-2: a_player_with_no_preference_grants_their_opponent_white", () => {
+  const byeOnly = [Color.BYE];
+  const playedBlack = [Color.BLACK];
+
+  const [noPreference, wantsWhite] = createPair(
+    { pairingNb: 7, score: 1, history: byeOnly.map((color) => ({ color })),
+      ...getColorPreference(byeOnly) },
+    { pairingNb: 3, score: 1, history: playedBlack.map((color) => ({ color })),
+      ...getColorPreference(playedBlack) },
+  );
+
+  expect(wantsWhite.colorPreference).toBe(Color.WHITE);
+
+  const result = assign(noPreference, wantsWhite, Color.WHITE);
+
+  expect(result.white).toBe(wantsWhite.playerId);
+  expect(result.black).toBe(noPreference.playerId);
+});
+
+test("CA-2: a_player_with_no_preference_grants_their_opponent_black", () => {
+  const byeOnly = [Color.BYE];
+  const playedWhite = [Color.WHITE];
+
+  const [noPreference, wantsBlack] = createPair(
+    { pairingNb: 7, score: 1, history: byeOnly.map((color) => ({ color })),
+      ...getColorPreference(byeOnly) },
+    { pairingNb: 3, score: 1, history: playedWhite.map((color) => ({ color })),
+      ...getColorPreference(playedWhite) },
+  );
+
+  expect(wantsBlack.colorPreference).toBe(Color.BLACK);
+
+  const result = assign(noPreference, wantsBlack, Color.WHITE);
+
+  expect(result.black).toBe(wantsBlack.playerId);
+  expect(result.white).toBe(noPreference.playerId);
+});
+
+test("CA-2: an_empty_history_also_grants_the_opponent", () => {
+  const playedBlack = [Color.BLACK];
+
+  const [noPreference, wantsWhite] = createPair(
+    { pairingNb: 7, score: 1, history: [], ...getColorPreference([]) },
+    { pairingNb: 3, score: 1, history: playedBlack.map((color) => ({ color })),
+      ...getColorPreference(playedBlack) },
+  );
+
+  const result = assign(noPreference, wantsWhite, Color.WHITE);
+
+  expect(result.white).toBe(wantsWhite.playerId);
+});
+
+/**
+ * CA-3 — FIDE C.04.3 art. 5.2.2, White side.
+ * The Black cases above left this half of the branch unexecuted by the whole
+ * suite; a mutation there survived until these were added.
+ */
+test("CA-3: when_same_preference_diff_level_white", () => {
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerTwo = createPlayerSample(
+    2,
+    0,
+    Color.WHITE,
+    ColorPreference.ABSOLUTE,
+    TWO_ID,
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+test("CA-3: when_same_preference_diff_level_white_second", () => {
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerTwo = createPlayerSample(
+    2,
+    0,
+    Color.WHITE,
+    ColorPreference.LOW,
+    TWO_ID,
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerOne.playerId);
+  expect(result.black).toBe(playerTwo.playerId);
+});
+
+/**
+ * CA-8 — order independence, as an expectation with a name of its own rather
+ * than only an assertion riding inside `assign`. One shape per branch of the
+ * assigner, so a branch that is order-dependent cannot hide behind the others.
+ */
+test("CA-8: the_result_never_depends_on_argument_order", () => {
+  const shapes: Array<[Color, ColorPreference, Color, ColorPreference]> = [
+    [Color.BYE, ColorPreference.LOW, Color.BYE, ColorPreference.LOW], // 5.2.5
+    [Color.WHITE, ColorPreference.HIGH, Color.BLACK, ColorPreference.HIGH], // 5.2.1
+    [Color.WHITE, ColorPreference.ABSOLUTE, Color.WHITE, ColorPreference.HIGH], // 5.2.2
+    [Color.BLACK, ColorPreference.LOW, Color.BLACK, ColorPreference.LOW], // 5.2.4
+  ];
+
+  for (const [onePref, oneLevel, twoPref, twoLevel] of shapes) {
+    const one = createPlayerSample(1, 1, onePref, oneLevel);
+    const two = createPlayerSample(2, 1, twoPref, twoLevel, TWO_ID);
+
+    expect(assignColors(one, two, Color.WHITE)).toEqual(
+      assignColors(two, one, Color.WHITE),
+    );
+  }
 });

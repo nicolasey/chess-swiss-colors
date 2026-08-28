@@ -8,14 +8,14 @@ import {
   getOppositeColor,
 } from "../index";
 
-test("when_nothing_happened", () => {
+test("CP-1: when_nothing_happened", () => {
   const result = getColorPreference([]);
 
   expect(result.colorPreference).toBe(Color.BYE);
   expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
 });
 
-test("after_round_one", () => {
+test("CP-3: after_round_one", () => {
   for (const color of [Color.WHITE, Color.BLACK]) {
     const result = getColorPreference([color]);
 
@@ -24,28 +24,45 @@ test("after_round_one", () => {
   }
 });
 
-test("when_balanced", () => {
-  const result = getColorPreference([Color.BLACK, Color.WHITE]);
+test("CP-2: when_balanced", () => {
+  // Both directions: a mirror-image bug must not pass.
+  for (const lastPlayed of [Color.WHITE, Color.BLACK]) {
+    const result = getColorPreference([getOppositeColor(lastPlayed), lastPlayed]);
 
-  expect(result.colorPreference).toBe(Color.BLACK);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+    expect(result.colorPreference).toBe(getOppositeColor(lastPlayed));
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+  }
 });
 
-test("when_high", () => {
-  const result = getColorPreference([Color.BLACK, Color.WHITE, Color.BLACK]);
+test("CP-3: when_high", () => {
+  for (const majority of [Color.WHITE, Color.BLACK]) {
+    const minority = getOppositeColor(majority);
+    const result = getColorPreference([majority, minority, majority]);
 
-  expect(result.colorPreference).toBe(Color.WHITE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+    expect(result.colorPreference).toBe(minority);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+  }
 });
 
-test("when_two_in_a_row", () => {
-  const result = getColorPreference([Color.WHITE, Color.BLACK, Color.BLACK]);
+test("CP-5: when_two_in_a_row", () => {
+  for (const repeated of [Color.WHITE, Color.BLACK]) {
+    const result = getColorPreference([
+      getOppositeColor(repeated),
+      repeated,
+      repeated,
+    ]);
 
-  expect(result.colorPreference).toBe(Color.WHITE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+    expect(result.colorPreference).toBe(getOppositeColor(repeated));
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  }
 });
 
-test("it_should_ignore_byes", () => {
+/**
+ * CP-8, and OUT-3 in aggregate: an unplayed round carries no colour, so it
+ * moves neither the colour difference nor the two-latest-rounds window. BYE
+ * covers every unplayed round — pairing-allocated byes and forfeits alike.
+ */
+test("CP-8: it_should_ignore_byes", () => {
   let result = getColorPreference([Color.WHITE, Color.BYE, Color.WHITE]);
 
   expect(result.colorPreference).toBe(Color.BLACK);
@@ -71,9 +88,11 @@ test("it_should_return_the_same_answer_when_called_twice", () => {
   expect(getColorPreference(history)).toEqual(getColorPreference(history));
 });
 
-test("it_should_never_return_a_level_outside_the_enum", () => {
-  // 5 whites vs 1 black, and the two most recent games differ so the
-  // three-in-a-row override does not fire. Raw diff is 4.
+test("CP-9: it_should_never_return_a_level_outside_the_enum", () => {
+  // One lopsided example, not a proof: 5 whites vs 1 black, the two most recent
+  // games differing so the three-in-a-row override does not fire. The history
+  // is itself illegal under C.04.1 r6/r7 — this guards the clamp on input the
+  // library should never receive, not a position an arbiter would ever see.
   const lopsided = [
     Color.WHITE,
     Color.WHITE,
@@ -119,7 +138,7 @@ test("get_last_two_colors_reads_the_two_most_recent_games", () => {
   ]);
 });
 
-test("get_last_two_colors_skips_byes", () => {
+test("CP-8: get_last_two_colors_skips_byes", () => {
   expect(
     getLastTwoColors([Color.WHITE, Color.BLACK, Color.BYE, Color.BYE]),
   ).toEqual([Color.BLACK, Color.WHITE]);
@@ -136,4 +155,72 @@ test("get_last_two_colors_should_not_mutate", () => {
   getLastTwoColors(history);
 
   expect(history).toEqual([Color.WHITE, Color.BLACK, Color.BYE]);
+});
+
+/**
+ * CP-6 — FIDE C.04.3 art. 1.7.1
+ * The colour-difference trigger and the two-in-a-row trigger are alternatives.
+ * A balanced history whose two latest games share a colour is ABSOLUTE for the
+ * opposite colour, not mild. See docs/fide-colour-rules.md.
+ */
+test("CP-6: two_in_a_row_is_absolute_even_when_colours_are_balanced", () => {
+  const result = getColorPreference([
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ]);
+
+  expect(result.colorPreference).toBe(Color.WHITE);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+});
+
+test("CP-6: byes_do_not_hide_a_balanced_two_in_a_row", () => {
+  const result = getColorPreference([
+    Color.WHITE,
+    Color.BYE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BYE,
+    Color.BLACK,
+  ]);
+
+  expect(result.colorPreference).toBe(Color.WHITE);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+});
+
+/**
+ * CP-7 — FIDE C.04.3 art. 1.7.1
+ * When the two triggers disagree, the preference colour comes from the repeated
+ * colour, not from the majority. The input below is deliberately illegal (three
+ * Blacks running): no legal history can make the two disagree, so this pins the
+ * derivation rather than a scenario an arbiter would ever see.
+ */
+test("CP-7: two_in_a_row_sets_the_direction_from_the_repeated_colour", () => {
+  const result = getColorPreference([
+    Color.BLACK,
+    Color.BLACK,
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+  ]);
+
+  expect(result.colorPreference).toBe(Color.BLACK);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+});
+
+/**
+ * CP-4 — FIDE C.04.3 art. 1.7.1, the colour-difference trigger on its own.
+ * Three of one colour against one of the other: the difference is 2, and the
+ * two most recent games differ so CP-5 cannot be what makes this absolute.
+ */
+test("CP-4: a_difference_beyond_one_is_absolute", () => {
+  for (const majority of [Color.WHITE, Color.BLACK]) {
+    const minority = getOppositeColor(majority);
+
+    const result = getColorPreference([majority, majority, minority, majority]);
+
+    expect(result.colorPreference).toBe(minority);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  }
 });

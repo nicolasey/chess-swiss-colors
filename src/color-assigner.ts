@@ -3,7 +3,6 @@ import type {
   ColorAssignment,
   ColorDiff,
 } from "../colors.types";
-import { ColorPreference } from "./color-preference.enum";
 import { Color, getOppositeColor } from "./color.enum";
 import { evaluateColorHistory } from "./color-compare";
 
@@ -12,8 +11,7 @@ import { evaluateColorHistory } from "./color-compare";
  *
  * @param playerOne PlayerColorState
  * @param playerTwo PlayerColorState
- * @param randomColor Color | Color chosen before round 1 as player 1 random start color
- * @param isLastRound boolean (defaults to false) In some systems, absolute color can be bypass if last round && topPlayer
+ * @param randomColor Color | the initial-colour drawn before round 1
  * @returns ColorAssignment
  */
 export function assignColors(
@@ -26,11 +24,16 @@ export function assignColors(
   const hasSameLevel =
     playerOne.colorPreferenceLevel === playerTwo.colorPreferenceLevel;
   const oneHasNoPreference = playerOne.colorPreference === Color.BYE;
-  const oneHasAbsolutePreference =
-    playerOne.colorPreferenceLevel === ColorPreference.ABSOLUTE;
+  const twoHasNoPreference = playerTwo.colorPreference === Color.BYE;
 
-  if (hasSamePreference && oneHasNoPreference)
-    return assignColorNoPref(playerOne, playerTwo, randomColor); // START
+  // 5.2.5 — neither has ever played, so neither has anything to grant
+  if (oneHasNoPreference && twoHasNoPreference)
+    return assignColorNoPref(playerOne, playerTwo, randomColor);
+
+  // 1.7.4 — exactly one has no preference: the other's is granted outright
+  if (oneHasNoPreference) return grantPreferenceOf(playerTwo, playerOne);
+  if (twoHasNoPreference) return grantPreferenceOf(playerOne, playerTwo);
+
   if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
   if (hasSamePreference && !hasSameLevel)
     return assignColorsMostAsked(playerOne, playerTwo); // E2
@@ -70,6 +73,25 @@ function assignColorNoPref(
   return higherGets === Color.WHITE
     ? { white: higher.playerId, black: lower.playerId }
     : { white: lower.playerId, black: higher.playerId };
+}
+
+/**
+ * FIDE C.04.3 art. 1.7.4
+ * A player who has played no games has no colour preference, and the preference
+ * of their opponent is granted. Reached only when exactly one of the pair has
+ * none: `assignColors` sends the both-have-none case to art. 5.2.5 first.
+ *
+ * @param player PlayerColorState the one holding the preference
+ * @param opponent PlayerColorState the one without
+ * @returns ColorAssignment
+ */
+function grantPreferenceOf(
+  player: PlayerColorState,
+  opponent: PlayerColorState,
+): ColorAssignment {
+  return player.colorPreference === Color.WHITE
+    ? { white: player.playerId, black: opponent.playerId }
+    : { white: opponent.playerId, black: player.playerId };
 }
 
 function assignColorDiffPref(
