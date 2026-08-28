@@ -159,11 +159,6 @@ test("the legal-history generator rejects what FIDE forbids", () => {
  * Kept as todos so docs/fide-colour-rules.md and the suite cannot drift apart.
  */
 
-// PC-4 (art. 2.1.3 [C3]): the prohibition covers non-topscorers only.
-// isColorCompatible takes no topscorer flag, so it also refuses topscorer pairs
-// that FIDE permits in the final round.
-test.todo("PC-4: topscorers with the same absolute preference may meet");
-
 /**
  * PC-5 — a decision, not a gap. This package recommends colours for a Swiss
  * engine that owns the pairing, and legality is that engine's call: only it can

@@ -94,8 +94,16 @@ Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
 
 ### `isColorCompatible(playerOne, playerTwo): boolean`
 
-`false` only when both players have the *same* preference at `ABSOLUTE` level.
-Call it before pairing to avoid building a pair no color assignment can save.
+`false` when both players have the *same* preference at `ABSOLUTE` level — and
+neither is a final-round topscorer (2.1.3 [C3]). Call it before pairing to avoid
+building a pair no color assignment can save.
+
+Set `isFinalRoundTopscorer` on a player to lift the prohibition. One topscorer
+in the pair is enough; the colors are then decided by the wider color difference
+(step 5 above). **This flag means art. 1.8's topscorer — a status that exists
+only when pairing the final round.** This package has no round counter and
+cannot infer one, so setting it in an earlier round produces pairings FIDE
+forbids and nothing here will notice.
 
 ### `isTopPlayer(player): boolean`
 
@@ -123,9 +131,10 @@ type ColorState = {
 
 type PlayerColorState = ColorState & {
   playerId: string | number;
-  pairingNb: number;          // 1-based, lower = higher ranked
+  pairingNb: number;             // 1-based, lower = higher ranked
   score: number;
-  history: { color: Color }[]; // oldest first
+  history: { color: Color }[];   // oldest first
+  isFinalRoundTopscorer?: boolean; // art. 1.8; absent means false
 };
 ```
 

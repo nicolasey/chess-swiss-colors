@@ -32,7 +32,7 @@ handbook before changing behaviour.
 | Absolute preference | 1.7.1 | `ColorPreference.ABSOLUTE` |
 | Strong preference | 1.7.2 | `ColorPreference.HIGH` |
 | Mild preference | 1.7.3 | `ColorPreference.LOW` |
-| Topscorer | Score above 50% of the maximum possible, when pairing the **final** round (1.8) | `isTopPlayer` |
+| Topscorer | Score above 50% of the maximum possible, when pairing the **final** round (1.8) | `PlayerColorState.isFinalRoundTopscorer`, declared by the caller; `isTopPlayer` is a helper |
 | TPN | Tournament Pairing Number; lower = higher ranked | `pairingNb` |
 | Initial-colour | Colour drawn by lot before round 1 | `randomColor` |
 | — | no FIDE counterpart | `ColorPreference.OFF_GRID` |
@@ -109,7 +109,7 @@ the handbook settled it.
 | PC-1 | 2.1.3 [C3] | Two **non-topscorers** with the same absolute preference shall not meet | both absolute White → incompatible | `when_incompatible` | ✅ |
 | PC-2 | 2.1.3 [C3] | Opposite preferences are compatible however strong | absolute White vs absolute Black → compatible | `when_compatible` | ✅ |
 | PC-3 | 2.1.3 [C3] | Only one absolute → compatible | absolute vs strong, same colour → compatible | `same_color_only_one_absolute` | ✅ |
-| PC-4 | 2.1.3 [C3] | The prohibition is restricted to non-topscorers; topscorers **may** meet | topscorer pairs bypass PC-1 | none | ⛔ `isColorCompatible` takes no topscorer flag |
+| PC-4 | 2.1.3 [C3] | The prohibition is restricted to non-topscorers; one topscorer in the pair lifts it | absolute-White pair with a topscorer → compatible | `PC-4:` ×4 | ✅ |
 | PC-5 | — | `assignColors` is advisory: it recommends colours and never refuses on rule grounds | a [C3]-forbidden pair still gets a well-formed recommendation | `PC-5:` ×2 | ✅ decided |
 
 PC-4 and CA-4 are the same missing feature seen from two sides. [C3] restricts
@@ -158,16 +158,15 @@ Over 50,000 compatible pairs in each sweep, no illegal colour.
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 27 | CP-1…CP-10, CA-1…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
-| ⛔ absent | 1 | PC-4 — the exemption that makes CA-4 reachable |
+| ✅ correct and covered | 28 | CP-1…CP-10, CA-1…CA-8, PC-1…PC-5, TS-1, OUT-1…OUT-4 |
 | ⚠️ no test possible | 1 | TS-2 |
 
-The two remaining gaps are one feature: art. 2.1.3 [C3] exempts topscorers from
-the same-absolute-preference prohibition (PC-4) so that they *can* be paired in
-the final round, and art. 5.2.2's wider-difference clause (CA-4) resolves that
-pair. `isTopPlayer` and `ColorPreference.OFF_GRID` are its unwired halves.
-Building it needs the numeric colour difference carried in `ColorState`, which
-is a breaking change to the type.
+**One expectation cannot be tested at all.** Art. 1.8 makes topscorer status a
+final-round fact, and `isFinalRoundTopscorer` carries the whole temporal bound.
+This package has no round counter and cannot infer one, so a caller setting the
+flag in an earlier round gets a pairing FIDE forbids and nothing here will
+notice. That is a caller contract with no in-library check — written down rather
+than left looking covered by the sweep.
 
 Every ID above must appear somewhere under `tests/`; the last test in
 `tests/fide-invariants.test.ts` fails the suite if one does not. That gate found
