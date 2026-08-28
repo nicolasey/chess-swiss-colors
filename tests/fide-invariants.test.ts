@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { expect, test } from "bun:test";
 import {
   Color,
+  ColorPreference,
   assignColors,
   getColorPreference,
   isColorCompatible,
@@ -71,6 +72,24 @@ const asPlayer = (
 });
 
 const show = (history: Color[]) => history.join("") || "(no games)";
+
+/** Outside C.04.1 r6 or r7 once this colour is added. */
+const breaches = (history: Color[], got: Color): boolean => {
+  const after = [...history, got];
+  return Math.abs(colorDifference(after)) > 2 || hasThreeInARow(after);
+};
+
+/**
+ * A pair FIDE permits only through the art. 2.1.3 [C3] topscorer exemption.
+ * Asked by re-testing compatibility with the flags cleared, so [C3] stays in
+ * isColorCompatible rather than being restated here.
+ */
+const exemptOnly = (one: PlayerColorState, two: PlayerColorState) =>
+  isColorCompatible(one, two) &&
+  !isColorCompatible(
+    { ...one, isFinalRoundTopscorer: false },
+    { ...two, isFinalRoundTopscorer: false },
+  );
 
 /**
  * OUT-1 (C.04.1 rule 6) and OUT-2 (C.04.1 rule 7).
@@ -212,4 +231,79 @@ test("every rule in docs/fide-colour-rules.md is cited by a test", () => {
   // Guard against the regex quietly matching nothing.
   expect(ids.length).toBeGreaterThan(20);
   expect(ids.filter((id) => !suite.includes(id))).toEqual([]);
+});
+
+/**
+ * OUT-1/OUT-2, exempted pairs.
+ *
+ * Once [C3] lifts, these pairs become compatible and *will* breach r6/r7 — that
+ * is the exemption working, bounded to the final round by art. 1.8. Skipping
+ * them would return the suite to green while covering strictly less, so they
+ * are checked against a sharper invariant instead:
+ *
+ *   both players want the same colour absolutely, so one is satisfied and one
+ *   is denied, and only the denied one can breach. The satisfied player's
+ *   difference moves back toward zero, and they cannot make a third of a colour
+ *   they were absolute against.
+ *
+ * That also nets CA-4: swap the two roles and both assertions fail.
+ */
+test("OUT-1/OUT-2: in an exempted pair exactly the denied player breaches", () => {
+  // Only an absolute preference can ever form an exempted pair.
+  const absolute = legalHistories(9).filter(
+    (h) => getColorPreference(h).colorPreferenceLevel === ColorPreference.ABSOLUTE,
+  );
+  const flagPairs: Array<[boolean, boolean]> = [
+    [true, false],
+    [false, true],
+    [true, true],
+  ];
+
+  const failures: string[] = [];
+  let pairsChecked = 0;
+
+  for (const oneHistory of absolute) {
+    for (const twoHistory of absolute) {
+      for (const [oneTop, twoTop] of flagPairs) {
+        const one = { ...asPlayer(1, 1, oneHistory), isFinalRoundTopscorer: oneTop };
+        const two = { ...asPlayer(2, 2, twoHistory), isFinalRoundTopscorer: twoTop };
+        if (!exemptOnly(one, two)) continue;
+
+        pairsChecked++;
+        const result = assignColors(one, two, W);
+
+        const wanted = one.colorPreference;
+        const oneIsWhite = result.white === one.playerId;
+        const oneIsSatisfied = (wanted === W) === oneIsWhite;
+
+        const satisfied = oneIsSatisfied
+          ? ([one, oneHistory, oneIsWhite ? W : B] as const)
+          : ([two, twoHistory, oneIsWhite ? B : W] as const);
+        const denied = oneIsSatisfied
+          ? ([two, twoHistory, oneIsWhite ? B : W] as const)
+          : ([one, oneHistory, oneIsWhite ? W : B] as const);
+
+        if (breaches(satisfied[1], satisfied[2]))
+          failures.push(`satisfied ${show(satisfied[1])} +${satisfied[2]} breached`);
+        if (!breaches(denied[1], denied[2]))
+          failures.push(`denied ${show(denied[1])} +${denied[2]} did not breach`);
+      }
+    }
+  }
+
+  // Floor: a bug that stops the exemption firing must not empty the bucket and
+  // leave this green — the failure mode a plain `continue` would have created.
+  expect(pairsChecked).toBeGreaterThan(1_000);
+  expect(failures.slice(0, 8)).toEqual([]);
+});
+
+/**
+ * And the main sweep stays honest: without the flag, nothing is exempt.
+ */
+test("OUT-1/OUT-2: nothing is exempt when no one is a topscorer", () => {
+  const one = asPlayer(1, 1, [B, B]);
+  const two = asPlayer(2, 2, [B, B]);
+
+  expect(isColorCompatible(one, two)).toBeFalse();
+  expect(exemptOnly(one, two)).toBeFalse();
 });

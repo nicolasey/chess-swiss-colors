@@ -136,8 +136,9 @@ included) and that a win is worth 1 point. Neither is checked.
 
 ## Outcome invariants
 
-Properties of the assignment itself. Nothing asserts these today; they are the
-natural targets for property-based tests over generated tournaments.
+Properties of the assignment itself, checked by exhaustive sweep rather than by
+example — they are what the preference rules exist to guarantee, so a break here
+means something upstream mislabelled a player.
 
 | ID | Art. | Rule | Expected behaviour | Status |
 |---|---|---|---|---|
@@ -145,6 +146,7 @@ natural targets for property-based tests over generated tournaments.
 | OUT-2 | C.04.1 r7 | Never the same colour three rounds running | no assignment gives a third repeat | ✅ |
 | OUT-3 | C.04.1 r8 | Prefer the colour played less; alternate when balanced | CP-2/CP-3 in aggregate | ✅ via CP rules |
 | OUT-4 | — | The two colours go to the two players passed in, and differ | no duplicate or foreign id | ✅ `expectValidAssignment` |
+| OUT-1/2 | 2.1.3, 1.8 | A pair permitted only by the [C3] exemption may breach r6/r7 — **exactly one** player does, the one denied their preference | 13,824 exempted pairs, no exception either way | ✅ |
 
 OUT-1 and OUT-2 hold only if callers respect PC-1. They are consequences of the
 preference rules rather than anything the assigner enforces directly, which is
@@ -153,6 +155,15 @@ so they are checked by sweep, not by example. Every legal history up to nine
 rounds is paired against every other, and again to six rounds with byes in the
 alphabet so the two players' games fall out of step and CA-5 has to align them.
 Over 50,000 compatible pairs in each sweep, no illegal colour.
+
+Pairs the [C3] exemption permits are **partitioned, not skipped**. They breach
+r6/r7 by design, so skipping them would return the suite to green while covering
+strictly less — `assignColors` could hand back the same player twice and nothing
+would say so. They get a sharper assertion instead: both players want the same
+colour absolutely, so one is satisfied and one denied, and only the denied one
+can breach. Verified over 13,824 exempted pairs with no exception either way.
+The bucket carries a floor, so a bug that stops the exemption firing fails the
+test rather than emptying it.
 
 ## Coverage summary
 
