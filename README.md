@@ -61,13 +61,16 @@ assignColors(
 
 Turns a color history into a preference and its strength.
 
+Checked in this order — the two absolute triggers are alternatives, so a
+balanced history can still be absolute (art. 1.7.1):
+
 | History | Result |
 |---|---|
+| Same color in the two latest games played | **opposite of that color, `ABSOLUTE`** |
 | Balanced, last game played | opposite of last color, `LOW` |
-| Balanced, no game played | `Color.BYE`, `LOW` |
+| Balanced, no game played | `Color.BYE` — no preference, `LOW` |
 | Diff of 1 | minority color, `HIGH` |
 | Diff of 2+ | minority color, `ABSOLUTE` |
-| Same color twice in a row | minority color, `ABSOLUTE` (C.04.1 g) |
 
 `OFF_GRID` is never derived here — set it yourself when a system grants a
 last-round exception to a top player.
@@ -77,13 +80,15 @@ last-round exception to a top player.
 Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
 
 1. Neither player has a preference → higher-ranked player gets `randomColor`
-   on an odd pairing number, the opposite on an even one (C.04.1 f).
+   on an odd pairing number, the opposite on an even one (5.2.5).
    Throws if a pairing number is missing or `0`.
-2. Different preferences → both get what they want (E.1).
-3. Same preference, different level → the stronger preference wins (E.2).
-4. Same preference and level → most recent differing color in their histories
-   decides; whoever had black more recently gets white.
-5. Still tied → higher rank wins (score, then lowest pairing number).
+2. Exactly one has no preference → the other's is granted (1.7.4).
+3. Different preferences → both get what they want (5.2.1).
+4. Same preference, different level → the stronger wins (5.2.2).
+5. Same preference and level → the most recent game in which the two held
+   different colors decides; whoever had black there now gets white (5.2.3).
+6. Still tied → higher rank wins: score first, then lowest pairing
+   number (5.2.4, ranked per 1.2).
 
 ### `isColorCompatible(playerOne, playerTwo): boolean`
 
@@ -130,12 +135,31 @@ Also exported: `getOppositeColor`, `getLastPlayedColor`, `getLastTwoColors`,
   tournament start and pass the same value to every `assignColors` call.
 - **Last-round exceptions are yours to apply.** This library never sets
   `OFF_GRID` on its own; combine `isTopPlayer` with your system's rules.
+- **`Color.BYE` covers every unplayed round** — byes, forfeits, absences. FIDE
+  needs no distinction between them for color: only games played count.
+- **Check `isColorCompatible` before pairing.** `assignColors` does not refuse a
+  pair FIDE forbids; it answers for whatever it is given.
+
+## Rules
+
+[docs/fide-colour-rules.md](docs/fide-colour-rules.md) maps every rule in
+C.04.1 and C.04.3 (as revised 1 February 2026) to a testable expectation with a
+stable ID, and records which are covered and which are not.
 
 ## Tests
 
 ```bash
 bun test
 ```
+
+Every rule ID in the doc must be cited somewhere under `tests/`, or the suite
+fails. To check that the rules are *defended* rather than merely mentioned:
+
+```bash
+./scripts/mutation-check.sh
+```
+
+It breaks each rule in `src/` in turn and confirms a test notices.
 
 ## License
 
