@@ -109,15 +109,19 @@ the handbook settled it.
 | PC-2 | 2.1.3 [C3] | Opposite preferences are compatible however strong | absolute White vs absolute Black → compatible | `when_compatible` | ✅ |
 | PC-3 | 2.1.3 [C3] | Only one absolute → compatible | absolute vs strong, same colour → compatible | `same_color_only_one_absolute` | ✅ |
 | PC-4 | 2.1.3 [C3] | The prohibition is restricted to non-topscorers; topscorers **may** meet | topscorer pairs bypass PC-1 | none | ⛔ `isColorCompatible` takes no topscorer flag |
-| PC-5 | — | `assignColors` should not silently emit an assignment for a PC-1 pair | refuse, or signal | none | ⛔ `isColorCompatible` is never called by `assignColors` |
+| PC-5 | — | `assignColors` is advisory: it recommends colours and never refuses on rule grounds | a [C3]-forbidden pair still gets a well-formed recommendation | `PC-5:` ×2 | ✅ decided |
 
 PC-4 and CA-4 are the same missing feature seen from two sides. [C3] restricts
 the prohibition to non-topscorers precisely so that topscorers *can* be paired
 with matching absolute preferences in the final round — and 5.2.2's wider-
 difference clause exists to resolve exactly that pair. The library has
-`isTopPlayer` and an `OFF_GRID` level but wires neither into the decision, and
-`assignColors`'s JSDoc still documents an `isLastRound` parameter its signature
-does not have.
+`isTopPlayer` and an `OFF_GRID` level but wires neither into the decision.
+
+PC-5 note: this package computes colours for a higher Swiss engine that owns
+the pairing. Only that engine can act on an incompatibility — by building a
+different pair — so `assignColors` recommends and never refuses on rule
+grounds. Screening with `isColorCompatible` is the caller's step. Malformed
+input is not covered by that: a missing pairing number still throws.
 
 ## Topscorer — `isTopPlayer`
 
@@ -153,17 +157,16 @@ Over 50,000 compatible pairs in each sweep, no illegal colour.
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 24 | CP-1…CP-9, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, TS-1, OUT-1…OUT-4 |
-| ⛔ absent or not implementable | 3 | CA-4, PC-4, PC-5 |
+| ✅ correct and covered | 25 | CP-1…CP-9, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
+| ⛔ absent | 2 | CA-4, PC-4 — one feature, see above |
 | ⚠️ no test possible | 1 | TS-2 |
 
-The three remaining gaps are one feature, not three defects: art. 2.1.3 [C3]
-exempts topscorers from the same-absolute-preference prohibition (PC-4) so that
-they *can* be paired in the final round, and art. 5.2.2's wider-difference
-clause (CA-4) exists to resolve exactly that pair. `isTopPlayer` and
-`ColorPreference.OFF_GRID` are the unwired halves of it. PC-5 is a separate
-open question: whether `assignColors` should refuse a pair FIDE forbids or go
-on trusting the caller.
+The two remaining gaps are one feature: art. 2.1.3 [C3] exempts topscorers from
+the same-absolute-preference prohibition (PC-4) so that they *can* be paired in
+the final round, and art. 5.2.2's wider-difference clause (CA-4) resolves that
+pair. `isTopPlayer` and `ColorPreference.OFF_GRID` are its unwired halves.
+Building it needs the numeric colour difference carried in `ColorState`, which
+is a breaking change to the type.
 
 Every ID above must appear somewhere under `tests/`; the last test in
 `tests/fide-invariants.test.ts` fails the suite if one does not. That gate found

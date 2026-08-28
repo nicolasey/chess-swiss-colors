@@ -169,10 +169,38 @@ test.todo("CA-4: both absolute and identical grants the wider colour difference"
 // that FIDE permits in the final round.
 test.todo("PC-4: topscorers with the same absolute preference may meet");
 
-// PC-5: assignColors never consults isColorCompatible, so it will answer for a
-// pair FIDE forbids instead of refusing. Pending the decision on whether the
-// library validates or only arbitrates.
-test.todo("PC-5: assignColors refuses an incompatible pair");
+/**
+ * PC-5 — a decision, not a gap. This package recommends colours for a Swiss
+ * engine that owns the pairing, and legality is that engine's call: only it can
+ * act on an incompatibility, by building a different pair. So assignColors
+ * answers for any pair it is given, including one art. 2.1.3 [C3] forbids, and
+ * never refuses on rule grounds. Callers screen with isColorCompatible first.
+ *
+ * Malformed input is a separate matter — a missing pairing number still throws,
+ * because that is not a forbidden pairing, it is an unanswerable question.
+ */
+test("PC-5: recommends_a_colour_even_for_a_pair_FIDE_forbids", () => {
+  // Two absolute White preferences: [C3] says these two shall not meet.
+  const one = asPlayer(1, 1, [B, B]);
+  const two = asPlayer(2, 2, [B, B]);
+
+  expect(isColorCompatible(one, two)).toBeFalse();
+
+  const result = assignColors(one, two, W);
+
+  expect(result.white).not.toBe(result.black);
+  expect([result.white, result.black].sort()).toEqual([1, 2]);
+  expect(assignColors(two, one, W)).toEqual(result);
+});
+
+test("PC-5: still_refuses_to_answer_an_unanswerable_question", () => {
+  const noPairingNumber = asPlayer(1, 0, []);
+  const two = asPlayer(2, 2, []);
+
+  expect(() => assignColors(noPairingNumber, two, W)).toThrow(
+    "Pairing numbers required !",
+  );
+});
 
 /**
  * The doc's Test column is hand-written and would otherwise rot silently. This

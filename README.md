@@ -137,8 +137,11 @@ Also exported: `getOppositeColor`, `getLastPlayedColor`, `getLastTwoColors`,
   `OFF_GRID` on its own; combine `isTopPlayer` with your system's rules.
 - **`Color.BYE` covers every unplayed round** — byes, forfeits, absences. FIDE
   needs no distinction between them for color: only games played count.
-- **Check `isColorCompatible` before pairing.** `assignColors` does not refuse a
-  pair FIDE forbids; it answers for whatever it is given.
+- **`assignColors` recommends, it does not decide.** This package computes
+  colors for a Swiss engine that owns the pairing, so it answers for any pair it
+  is given — including one FIDE forbids — and never refuses on rule grounds.
+  Screen with `isColorCompatible` first; only your engine can act on an
+  incompatibility, by building a different pair.
 
 ## Rules
 
