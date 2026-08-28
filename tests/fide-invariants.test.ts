@@ -210,7 +210,9 @@ test("PC-5: still_refuses_to_answer_an_unanswerable_question", () => {
  */
 test("every rule in docs/fide-colour-rules.md is cited by a test", () => {
   const doc = readFileSync("docs/fide-colour-rules.md", "utf8");
-  const ids = [...new Set(doc.match(/\b(?:CP|CA|PC|TS|OUT)-\d\b/g) ?? [])].sort();
+  // \d+ rather than \d: a two-digit id would not match at all, so the gate
+  // would pass by ignoring it instead of by covering it.
+  const ids = [...new Set(doc.match(/\b(?:CP|CA|PC|TS|OUT)-\d+\b/g) ?? [])].sort();
 
   const suite = readdirSync("tests")
     .filter((file) => file.endsWith(".ts"))

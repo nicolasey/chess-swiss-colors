@@ -113,7 +113,11 @@ over their common length.
 enum Color { WHITE = "W", BLACK = "B", BYE = "BYE" }
 enum ColorPreference { LOW = 0, HIGH = 1, ABSOLUTE = 2, OFF_GRID = 3 }
 
-type ColorState = { colorPreference: Color; colorPreferenceLevel: ColorPreference };
+type ColorState = {
+  colorPreference: Color;
+  colorPreferenceLevel: ColorPreference;
+  colorDifference: number;    // signed: White games minus Black (art. 1.6)
+};
 
 type PlayerColorState = ColorState & {
   playerId: string | number;

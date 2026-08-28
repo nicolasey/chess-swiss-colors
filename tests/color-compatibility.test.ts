@@ -5,6 +5,7 @@ import {
   ColorPreference,
   type PlayerColorState,
 } from "../index";
+import { differenceFor } from "./fixtures";
 
 const player = (
   playerId: number,
@@ -16,6 +17,7 @@ const player = (
   score: 3,
   colorPreference,
   colorPreferenceLevel,
+  colorDifference: differenceFor(colorPreference, colorPreferenceLevel),
   history: [],
 });
 

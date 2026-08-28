@@ -8,6 +8,7 @@ import {
   type ColorAssignment,
   type PlayerColorState,
 } from "../index";
+import { differenceFor } from "./fixtures";
 
 const ONE_ID = 1;
 const TWO_ID = 2;
@@ -18,12 +19,14 @@ const createPlayerSample = (
   colorPreference: Color,
   colorPreferenceLevel: ColorPreference,
   playerId = ONE_ID,
+  colorDifference = differenceFor(colorPreference, colorPreferenceLevel),
 ): PlayerColorState => ({
   playerId,
   pairingNb,
   score,
   colorPreference,
   colorPreferenceLevel,
+  colorDifference,
   history: [],
 });
 
@@ -305,6 +308,7 @@ test("it_should_not_mutate_the_players_it_is_given", () => {
       score: 1,
       colorPreference: Color.BLACK,
       colorPreferenceLevel: ColorPreference.HIGH,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.HIGH),
       history: [{ color: Color.WHITE }, { color: Color.BLACK }],
     },
     {
@@ -312,6 +316,7 @@ test("it_should_not_mutate_the_players_it_is_given", () => {
       score: 1,
       colorPreference: Color.BLACK,
       colorPreferenceLevel: ColorPreference.HIGH,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.HIGH),
       history: [{ color: Color.BLACK }, { color: Color.BLACK }],
     },
   );

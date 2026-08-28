@@ -34,6 +34,7 @@ mutate src/color-assigner.ts 's/return integer % 2 === 0;/return integer % 2 !==
 mutate src/color-state.ts    's/if \(lastTwoColors \&\& lastTwoColors\[0\] === lastTwoColors\[1\]\)/if (false)/'                                                              '1.7.1  two-in-a-row is absolute'
 mutate src/color-state.ts    's/getOppositeColor\(getLastPlayedColor\(colorHistory\)\)/getLastPlayedColor(colorHistory)/'                                                                        '1.7.3  mild alternates from last game'
 mutate src/color-compare.ts  's/if \(color !== Color\.BYE\) withoutByes\.push\(color\);/withoutByes.push(color);/'                                            '1.6    unplayed rounds carry no colour'
+mutate src/color-state.ts    's/const colorDifference = white - black;/const colorDifference = black - white;/'                                            '1.6    difference is signed White minus Black'
 mutate src/top-player.ts     's/return player\.score > half;/return player.score >= half;/'                                                                   '1.8    topscorer is strictly over half'
 mutate src/color-compatibility.ts 's/return !incompatibleIf;/return true;/'                                                                                   '2.1.3  same absolute preference may not meet'
 

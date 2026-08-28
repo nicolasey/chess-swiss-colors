@@ -28,7 +28,7 @@ handbook before changing behaviour.
 
 | Term | Definition | This codebase |
 |---|---|---|
-| Colour difference | Rounds played White minus rounds played Black (1.6) | derived in `getColorPreference`, **not stored** |
+| Colour difference | Rounds played White minus rounds played Black (1.6) | `ColorState.colorDifference`, signed |
 | Absolute preference | 1.7.1 | `ColorPreference.ABSOLUTE` |
 | Strong preference | 1.7.2 | `ColorPreference.HIGH` |
 | Mild preference | 1.7.3 | `ColorPreference.LOW` |
@@ -61,7 +61,8 @@ neither the colour difference nor "the two latest rounds".
 | CP-6 | 1.7.1 | CP-5 applies whatever the colour difference is — the two triggers are alternatives, not a rule plus a modifier | `[W,W,B,B]` → absolute White | `CP-6:` ×2 | ✅ |
 | CP-7 | 1.7.1 | When CP-5 fires, the preference colour comes from the repeated colour, not from the count | last two Black → White, even if Black is the majority | `CP-7:` | ✅ |
 | CP-8 | 1.6 | Unplayed rounds are excluded from the difference and from "two latest rounds" | `[W,BYE,W]` → absolute Black | `it_should_ignore_byes`, `get_last_two_colors_skips_byes` | ✅ |
-| CP-9 | 1.7 | Level is always one of mild/strong/absolute | never outside the enum | `it_should_never_return_a_level_outside_the_enum` | ✅ |
+| CP-9 | 1.7 | Level is always one of mild/strong/absolute | never outside the enum | `CP-9:` | ✅ |
+| CP-10 | 1.6 | `ColorState` reports the **signed** colour difference, White games minus Black | `[W,W,B]` → `+1`; byes move it not at all | `CP-10:` ×3 | ✅ |
 
 CP-6 was reachable in ordinary play by round 4 and was the defect with the
 largest blast radius: a mild label loses to any strong preference under CA-3,
@@ -77,7 +78,7 @@ Applied in descending priority; the first that resolves the pair wins.
 | CA-1 | 5.2.1 | Grant both preferences when they differ | Black-pref vs White-pref → each gets theirs | `when_diff_preference` | ✅ |
 | CA-2 | 1.7.4 | One player has no preference → the opponent's preference is granted | bye-only vs White-pref → opponent gets White | `CA-2:` ×3 | ✅ |
 | CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `CA-3:` ×4 | ✅ both colours |
-| **CA-4** | **5.2.2** | **Both absolute and identical (topscorers only) → grant the wider colour difference** | **diff +3 outranks diff +2** | **none** | ⛔ **not implementable — `ColorState` discards the magnitude** |
+| **CA-4** | **5.2.2** | **Both absolute and identical (topscorers only) → grant the wider colour difference** | **magnitude 2 outranks magnitude 1** | **none** | ⛔ **the magnitude now travels (CP-10); the branch does not exist yet** |
 | CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `CA-5:` ×2 | ✅ |
 | CA-6 | 5.2.4 | Otherwise grant the higher-ranked player's preference | lower TPN wins | `when_same`, `when_same_but_score_diff` | ✅ |
 | CA-7 | 5.2.5 | Neither has a preference → initial-colour to the higher-ranked player on an odd TPN, opposite on an even one | round 1 | `round_one_gives_the_drawn_colour_by_pairing_parity` | ✅ |
@@ -157,7 +158,7 @@ Over 50,000 compatible pairs in each sweep, no illegal colour.
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 25 | CP-1…CP-9, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
+| ✅ correct and covered | 26 | CP-1…CP-10, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
 | ⛔ absent | 2 | CA-4, PC-4 — one feature, see above |
 | ⚠️ no test possible | 1 | TS-2 |
 

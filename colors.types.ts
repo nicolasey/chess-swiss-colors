@@ -11,6 +11,12 @@ export type ColorAssignment = {
 export type ColorState = {
   colorPreference: Color;
   colorPreferenceLevel: ColorPreference;
+
+  // FIDE C.04.3 art. 1.6 — signed: games played White minus games played Black.
+  // A preference for White therefore goes with a negative difference. Needed by
+  // art. 5.2.2, which breaks a tie between two absolute preferences on the
+  // wider difference, a distinction the capped level cannot express.
+  colorDifference: number;
 };
 
 export type PlayerColorState = {
@@ -22,6 +28,7 @@ export type PlayerColorState = {
   // Color State
   colorPreference: Color;
   colorPreferenceLevel: ColorPreference;
+  colorDifference: number;
 
   // History must have color field in
   history: ColorHistoryContract[];

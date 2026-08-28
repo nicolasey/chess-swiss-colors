@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { Color, ColorPreference, isTopPlayer, type PlayerColorState } from "../index";
+import { differenceFor } from "./fixtures";
 
 const createPlayerSample = (
   score: number,
@@ -10,6 +11,7 @@ const createPlayerSample = (
   score,
   colorPreference: Color.WHITE,
   colorPreferenceLevel: ColorPreference.HIGH,
+  colorDifference: differenceFor(Color.WHITE, ColorPreference.HIGH),
   history: Array.from({ length: rounds }, (_, index) => ({
     color: index % 2 === 0 ? Color.WHITE : Color.BLACK,
   })),

@@ -5,7 +5,8 @@ import { Color, getOppositeColor } from "./color.enum";
 export function getColorPreference(colorHistory: Color[]): ColorState {
   const white = colorHistory.filter((item) => item === Color.WHITE).length;
   const black = colorHistory.filter((item) => item === Color.BLACK).length;
-  const diff = Math.abs(white - black);
+  const colorDifference = white - black; // art. 1.6, signed
+  const diff = Math.abs(colorDifference);
 
   const lastTwoColors = getLastTwoColors(colorHistory);
 
@@ -20,6 +21,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
     return {
       colorPreference: getOppositeColor(lastTwoColors[0]),
       colorPreferenceLevel: ColorPreference.ABSOLUTE,
+      colorDifference,
     };
 
   /**
@@ -31,6 +33,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
     return {
       colorPreference: getOppositeColor(getLastPlayedColor(colorHistory)),
       colorPreferenceLevel: ColorPreference.LOW,
+      colorDifference,
     };
 
   /**
@@ -44,6 +47,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
       diff,
       ColorPreference.ABSOLUTE,
     ) as ColorPreference,
+    colorDifference,
   };
 }
 
