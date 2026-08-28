@@ -1,3 +1,4 @@
+import { readFileSync, readdirSync } from "node:fs";
 import { expect, test } from "bun:test";
 import {
   Color,
@@ -139,3 +140,23 @@ test.todo("PC-4: topscorers with the same absolute preference may meet");
 // pair FIDE forbids instead of refusing. Pending the decision on whether the
 // library validates or only arbitrates.
 test.todo("PC-5: assignColors refuses an incompatible pair");
+
+/**
+ * The doc's Test column is hand-written and would otherwise rot silently. This
+ * makes it mechanical: every rule ID in docs/fide-colour-rules.md must be cited
+ * somewhere under tests/ — as a test name, a todo, or a comment explaining why
+ * no test is possible.
+ */
+test("every rule in docs/fide-colour-rules.md is cited by a test", () => {
+  const doc = readFileSync("docs/fide-colour-rules.md", "utf8");
+  const ids = [...new Set(doc.match(/\b(?:CP|CA|PC|TS|OUT)-\d\b/g) ?? [])].sort();
+
+  const suite = readdirSync("tests")
+    .filter((file) => file.endsWith(".ts"))
+    .map((file) => readFileSync(`tests/${file}`, "utf8"))
+    .join("\n");
+
+  // Guard against the regex quietly matching nothing.
+  expect(ids.length).toBeGreaterThan(20);
+  expect(ids.filter((id) => !suite.includes(id))).toEqual([]);
+});

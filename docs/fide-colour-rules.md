@@ -37,6 +37,15 @@ handbook before changing behaviour.
 | Initial-colour | Colour drawn by lot before round 1 | `randomColor` |
 | — | no FIDE counterpart | `ColorPreference.OFF_GRID` |
 
+`Color.BYE` covers **every unplayed round** — pairing-allocated byes, half-point
+byes, forfeits, absences. FIDE needs no separate forfeit colour: art. 1.6 counts
+only games played, and art. 1.7.1 looks only at rounds a player played, so both
+are skipped identically. Where byes and forfeits genuinely differ is outside
+this library — score arrives separately as `player.score`, and C.04.1 r4 (no
+second bye) is a pairing constraint. `Color.BYE` is also used as the
+no-preference sentinel in `ColorState.colorPreference`; that second job is what
+makes CA-2 possible.
+
 Unplayed rounds (byes, forfeits) never carry a colour: they count toward
 neither the colour difference nor "the two latest rounds".
 
@@ -66,17 +75,30 @@ Applied in descending priority; the first that resolves the pair wins.
 |---|---|---|---|---|---|
 | CA-1 | 5.2.1 | Grant both preferences when they differ | Black-pref vs White-pref → each gets theirs | `when_diff_preference` | ✅ |
 | **CA-2** | **1.7.4** | **One player has no preference → the opponent's preference is granted** | **bye-only vs White-pref → opponent gets White** | **none** | ❌ **opponent denied in one argument order** |
-| CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `when_same_preference_diff_level` ×2 | ✅ |
+| CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `CA-3:` ×4 | ✅ both colours |
 | **CA-4** | **5.2.2** | **Both absolute and identical (topscorers only) → grant the wider colour difference** | **diff +3 outranks diff +2** | **none** | ⛔ **not implementable — `ColorState` discards the magnitude** |
-| CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `when_same_absolute_diff_color_history` | ✅ |
+| CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `CA-5:` ×2 | ✅ |
 | CA-6 | 5.2.4 | Otherwise grant the higher-ranked player's preference | lower TPN wins | `when_same`, `when_same_but_score_diff` | ✅ |
 | CA-7 | 5.2.5 | Neither has a preference → initial-colour to the higher-ranked player on an odd TPN, opposite on an even one | round 1 | `round_one_gives_the_drawn_colour_by_pairing_parity` | ✅ |
-| CA-8 | — | Argument order must not change the result | `f(a,b) === f(b,a)` | `expectValidAssignment` helper | ⚠️ asserted everywhere except the CA-2 input that breaks it |
+| CA-8 | — | Argument order must not change the result | `f(a,b) === f(b,a)` | `CA-8:` + `expectValidAssignment` | ✅ |
 
-CA-6 note: FIDE ranks by TPN within a score bracket; the code sorts by score
-first and falls back to TPN. Inside a bracket scores are equal, so the two
-agree — but the code will silently accept a cross-bracket pair and rank it by
-score, which FIDE does not define here.
+CA-5 note: the old `when_same_absolute_diff_color_history` was named for this
+rule but never reached it — its two histories were identical over the compared
+range, so the pair fell through to CA-6 and the assertion passed for the wrong
+reason. Its replacement makes playerTwo the higher ranked of the pair so CA-6
+would give the opposite answer: if the pair ever stops reaching 5.2.3 the test
+fails, rather than passing by accident.
+
+CA-6 note: art. 1.2 ranks for pairing purposes by score first, then TPN
+ascending. The code's `b.score - a.score || a.pairingNb - b.pairingNb` matches
+that exactly, including for cross-bracket pairs.
+
+Bye alignment in CA-5 is **not specified by FIDE**. The 2026 wording says "the
+most recent time", not round, and is silent on unplayed rounds. The code strips
+byes per player and compares by games played; `src/color-compare.ts` carries a
+`@todo` admitting the uncertainty. That is a defensible reading, but it is this
+library's choice — `compare_history_with_byes` currently asserts it as though
+the handbook settled it.
 
 ## Pairing constraints — `isColorCompatible`
 
@@ -126,10 +148,21 @@ CP-6 silently produces an OUT-2 violation rather than an error.
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 18 | CP-1…CP-5, CP-8, CP-9, CA-1, CA-3, CA-5…CA-7, PC-1…PC-3, TS-1, OUT-3, OUT-4 |
-| ⚠️ correct but untested or latent | 3 | CP-7, CA-8, TS-2 |
-| ❌ wrong, reachable in normal play | 2 | CP-6, CA-2 |
-| ⛔ absent or not implementable | 5 | CA-4, PC-4, PC-5, OUT-1, OUT-2 |
+| ✅ correct and covered | 19 | CP-1…CP-5, CP-8, CP-9, CA-1, CA-3, CA-5…CA-8, PC-1…PC-3, TS-1, OUT-3, OUT-4 |
+| ❌ failing test, defect confirmed | 5 | CP-6, CP-7, CA-2, OUT-1, OUT-2 |
+| ⛔ absent or not implementable | 3 | CA-4, PC-4, PC-5 |
+| ⚠️ no test possible | 1 | TS-2 |
 
-Referencing an ID from a test name or comment keeps this table honest — a rule
-with no citation is a rule nothing checks.
+Every ID above must appear somewhere under `tests/`; the last test in
+`tests/fide-invariants.test.ts` fails the suite if one does not. That gate found
+CP-4 uncited the first time it ran.
+
+Citation proves a rule is *mentioned*. To prove it is *defended*:
+
+```bash
+./scripts/mutation-check.sh
+```
+
+It breaks each rule in `src/` in turn and confirms a test notices. A SURVIVED
+line means nothing is defending that rule — which is how 5.2.3 sat unverified
+behind 100% line coverage.
