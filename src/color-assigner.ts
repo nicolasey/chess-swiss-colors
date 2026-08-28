@@ -3,6 +3,7 @@ import type {
   ColorAssignment,
   ColorDiff,
 } from "../colors.types";
+import { ColorPreference } from "./color-preference.enum";
 import { Color, getOppositeColor } from "./color.enum";
 import { evaluateColorHistory } from "./color-compare";
 
@@ -36,7 +37,13 @@ export function assignColors(
 
   if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
   if (hasSamePreference && !hasSameLevel)
-    return assignColorsMostAsked(playerOne, playerTwo); // E2
+    return assignColorsMostAsked(playerOne, playerTwo); // 5.2.2, first clause
+
+  // 5.2.2, second clause. Levels are equal here, so testing one is enough.
+  if (playerOne.colorPreferenceLevel === ColorPreference.ABSOLUTE) {
+    const byWiderDifference = assignByWiderDifference(playerOne, playerTwo);
+    if (byWiderDifference !== null) return byWiderDifference;
+  }
 
   // If same preference, and same level, then we compare color history
   const compare = evaluateColorHistory(playerOne.history, playerTwo.history);
@@ -130,6 +137,39 @@ function assignColorsMostAsked(
             ? playerOne.playerId
             : playerTwo.playerId,
       };
+}
+
+/**
+ * FIDE C.04.3 art. 5.2.2, second clause
+ * Both players hold the same absolute preference, so their colour differences
+ * share a sign and only the magnitude separates them: the wider one takes the
+ * colour. [C3] permits such a pair for topscorers only.
+ *
+ * Returns null when the magnitudes are equal, which leaves art. 5.2.3 to
+ * decide. That is the common outcome rather than the exception: C.04.1 r6 caps
+ * the difference at ±2, so a preference absolute *because of* the difference is
+ * always exactly ±2. The clause separates players only when one of them is
+ * absolute through the two-in-a-row trigger at a smaller difference.
+ *
+ * @param playerOne PlayerColorState
+ * @param playerTwo PlayerColorState
+ * @returns ColorAssignment | null
+ */
+function assignByWiderDifference(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+): ColorAssignment | null {
+  const oneWidth = Math.abs(playerOne.colorDifference);
+  const twoWidth = Math.abs(playerTwo.colorDifference);
+
+  if (oneWidth === twoWidth) return null;
+
+  const wider = oneWidth > twoWidth ? playerOne : playerTwo;
+  const other = wider === playerOne ? playerTwo : playerOne;
+
+  return wider.colorPreference === Color.WHITE
+    ? { white: wider.playerId, black: other.playerId }
+    : { white: other.playerId, black: wider.playerId };
 }
 
 function isEven(integer: number): boolean {

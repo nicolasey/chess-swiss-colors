@@ -29,6 +29,8 @@ echo "baseline: $(printf '%s' "$base" | grep -c .) failing"
 mutate src/color-assigner.ts 's/return playerOne\.colorPreference === Color\.BLACK/return playerOne.colorPreference === Color.WHITE/'                        '5.2.1  grant both preferences'
 mutate src/color-assigner.ts 's/playerOne\.colorPreferenceLevel > playerTwo\.colorPreferenceLevel/false/'                                                     '5.2.2  grant the stronger'
 mutate src/color-assigner.ts 's/if \(compare !== null\)/if (false \&\& compare !== null)/'                                                                    '5.2.3  alternate from differing game'
+mutate src/color-assigner.ts 's/const wider = oneWidth > twoWidth/const wider = oneWidth < twoWidth/'                                                       '5.2.2b wider difference takes the colour'
+mutate src/color-assigner.ts 's/if \(oneWidth === twoWidth\) return null;//'                                                                                 '5.2.2b equal magnitudes fall through'
 mutate src/color-assigner.ts 's/\(a, b\) => b\.score - a\.score \|\| a\.pairingNb - b\.pairingNb/(a, b) => a.pairingNb - b.pairingNb/'                        '1.2    rank by score then TPN'
 mutate src/color-assigner.ts 's/return integer % 2 === 0;/return integer % 2 !== 0;/'                                                                         '5.2.5  initial-colour by TPN parity'
 mutate src/color-state.ts    's/if \(lastTwoColors \&\& lastTwoColors\[0\] === lastTwoColors\[1\]\)/if (false)/'                                                              '1.7.1  two-in-a-row is absolute'

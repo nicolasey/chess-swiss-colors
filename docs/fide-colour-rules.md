@@ -78,7 +78,7 @@ Applied in descending priority; the first that resolves the pair wins.
 | CA-1 | 5.2.1 | Grant both preferences when they differ | Black-pref vs White-pref → each gets theirs | `when_diff_preference` | ✅ |
 | CA-2 | 1.7.4 | One player has no preference → the opponent's preference is granted | bye-only vs White-pref → opponent gets White | `CA-2:` ×3 | ✅ |
 | CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `CA-3:` ×4 | ✅ both colours |
-| **CA-4** | **5.2.2** | **Both absolute and identical (topscorers only) → grant the wider colour difference** | **magnitude 2 outranks magnitude 1** | **none** | ⛔ **the magnitude now travels (CP-10); the branch does not exist yet** |
+| CA-4 | 5.2.2 | Both absolute and identical (topscorers only) → grant the wider colour difference | magnitude 2 outranks magnitude 1; equal magnitudes fall through to CA-5 | `CA-4:` ×2 | ✅ |
 | CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `CA-5:` ×2 | ✅ |
 | CA-6 | 5.2.4 | Otherwise grant the higher-ranked player's preference | lower TPN wins | `when_same`, `when_same_but_score_diff` | ✅ |
 | CA-7 | 5.2.5 | Neither has a preference → initial-colour to the higher-ranked player on an odd TPN, opposite on an even one | round 1 | `round_one_gives_the_drawn_colour_by_pairing_parity` | ✅ |
@@ -158,8 +158,8 @@ Over 50,000 compatible pairs in each sweep, no illegal colour.
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 26 | CP-1…CP-10, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
-| ⛔ absent | 2 | CA-4, PC-4 — one feature, see above |
+| ✅ correct and covered | 27 | CP-1…CP-10, CA-1…CA-8, PC-1…PC-3, PC-5, TS-1, OUT-1…OUT-4 |
+| ⛔ absent | 1 | PC-4 — the exemption that makes CA-4 reachable |
 | ⚠️ no test possible | 1 | TS-2 |
 
 The two remaining gaps are one feature: art. 2.1.3 [C3] exempts topscorers from

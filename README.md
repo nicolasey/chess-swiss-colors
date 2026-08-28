@@ -85,9 +85,11 @@ Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
 2. Exactly one has no preference → the other's is granted (1.7.4).
 3. Different preferences → both get what they want (5.2.1).
 4. Same preference, different level → the stronger wins (5.2.2).
-5. Same preference and level → the most recent game in which the two held
+5. Same preference, both absolute → the wider color difference wins (5.2.2).
+   Equal magnitudes fall through to the next rule.
+6. Same preference and level → the most recent game in which the two held
    different colors decides; whoever had black there now gets white (5.2.3).
-6. Still tied → higher rank wins: score first, then lowest pairing
+7. Still tied → higher rank wins: score first, then lowest pairing
    number (5.2.4, ranked per 1.2).
 
 ### `isColorCompatible(playerOne, playerTwo): boolean`

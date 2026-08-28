@@ -159,11 +159,6 @@ test("the legal-history generator rejects what FIDE forbids", () => {
  * Kept as todos so docs/fide-colour-rules.md and the suite cannot drift apart.
  */
 
-// CA-4 (art. 5.2.2): when both preferences are absolute and identical, the
-// wider colour difference wins. ColorState stores only a capped level, so a
-// difference of +3 and one of +2 are indistinguishable here.
-test.todo("CA-4: both absolute and identical grants the wider colour difference");
-
 // PC-4 (art. 2.1.3 [C3]): the prohibition covers non-topscorers only.
 // isColorCompatible takes no topscorer flag, so it also refuses topscorer pairs
 // that FIDE permits in the final round.

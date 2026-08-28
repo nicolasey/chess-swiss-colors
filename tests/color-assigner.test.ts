@@ -481,3 +481,82 @@ test("CA-8: the_result_never_depends_on_argument_order", () => {
     );
   }
 });
+
+/**
+ * CA-4 — FIDE C.04.3 art. 5.2.2, second clause.
+ * Both are absolute for White. playerTwo's difference is −2 against playerOne's
+ * −1, so playerTwo takes it.
+ *
+ * playerOne is deliberately the higher ranked, and at their most recent
+ * differing game playerOne held Black — so 5.2.3 *and* 5.2.4 would both give
+ * White to playerOne. If the clause is skipped this fails, rather than passing
+ * on a fallback that happened to agree.
+ */
+test("CA-4: the_wider_colour_difference_takes_the_colour", () => {
+  const oneHistory = [Color.WHITE, Color.BLACK, Color.BLACK];
+  const twoHistory = [Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 1,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 2,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  // The premise: 5.2.2's second clause is only reached when 5.2.1 and the
+  // first clause cannot decide.
+  expect(playerOne.colorPreference).toBe(playerTwo.colorPreference);
+  expect(playerOne.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerTwo.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(Math.abs(playerTwo.colorDifference)).toBeGreaterThan(
+    Math.abs(playerOne.colorDifference),
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+/**
+ * CA-4 — equal magnitudes leave the clause with nothing to say, and 5.2.3
+ * decides. This is the common path, not the exotic one: r6 caps the difference
+ * at ±2, so two players absolute *because of* their difference always tie.
+ */
+test("CA-4: equal_magnitudes_fall_through_to_the_next_rule", () => {
+  const oneHistory = [Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK];
+  const twoHistory = [Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 2,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 1,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  expect(playerOne.colorDifference).toBe(playerTwo.colorDifference);
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  // 5.2.3: playerOne held Black at their most recent differing game, so takes
+  // White. playerTwo is the higher ranked, so 5.2.4 would have said the
+  // opposite — this asserts the fall-through lands on 5.2.3, not past it.
+  expect(result.white).toBe(playerOne.playerId);
+  expect(result.black).toBe(playerTwo.playerId);
+});
