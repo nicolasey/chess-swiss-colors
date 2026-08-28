@@ -39,16 +39,22 @@ const isLegalHistory = (history: Color[]): boolean => {
   return !hasThreeInARow(history);
 };
 
-const legalHistories = (maxLength: number): Color[][] => {
+/**
+ * Every legal history up to `maxLength` rounds, over `alphabet`. Including
+ * Color.BYE is what makes two players' rounds fall out of step, which is the
+ * only situation in which 5.2.3's alignment choice can change an answer.
+ */
+const legalHistories = (
+  maxLength: number,
+  alphabet: Color[] = [W, B],
+): Color[][] => {
   const all: Color[][] = [];
-  for (let n = 0; n <= maxLength; n++) {
-    for (let bits = 0; bits < 1 << n; bits++) {
-      const history = Array.from({ length: n }, (_, i) =>
-        (bits >> i) & 1 ? W : B,
-      );
-      if (isLegalHistory(history)) all.push(history);
-    }
-  }
+  const build = (history: Color[]) => {
+    if (isLegalHistory(history)) all.push(history);
+    if (history.length === maxLength) return;
+    for (const color of alphabet) build([...history, color]);
+  };
+  build([]);
   return all;
 };
 
@@ -73,8 +79,7 @@ const show = (history: Color[]) => history.join("") || "(no games)";
  * the colour it hands out must leave both players legal. Incompatible pairs are
  * skipped: refusing to build them is the pairing engine's job (PC-1).
  */
-test("OUT-1/OUT-2: a compatible pair is never given an illegal colour", () => {
-  const histories = legalHistories(5);
+const checkEveryCompatiblePair = (histories: Color[][]) => {
   const failures: string[] = [];
   let pairsChecked = 0;
 
@@ -104,8 +109,34 @@ test("OUT-1/OUT-2: a compatible pair is never given an illegal colour", () => {
     }
   }
 
-  expect(pairsChecked).toBeGreaterThan(0);
+  return { failures, pairsChecked };
+};
+
+/**
+ * Nine rounds of ordinary play: every legal colour history a player could hold,
+ * against every other, wherever the library itself calls the pair compatible.
+ */
+test("OUT-1/OUT-2: a compatible pair is never given an illegal colour", () => {
+  const { failures, pairsChecked } = checkEveryCompatiblePair(
+    legalHistories(9),
+  );
+
+  expect(pairsChecked).toBeGreaterThan(50_000);
   // Slice so a failure reports a readable sample rather than thousands of lines.
+  expect(failures.slice(0, 8)).toEqual([]);
+});
+
+/**
+ * The same sweep with unplayed rounds in play, so the two players' games fall
+ * out of step and 5.2.3 has to align them. Shallower, because the alphabet is
+ * three wide.
+ */
+test("OUT-1/OUT-2: byes in either history change nothing", () => {
+  const { failures, pairsChecked } = checkEveryCompatiblePair(
+    legalHistories(6, [W, B, Color.BYE]),
+  );
+
+  expect(pairsChecked).toBeGreaterThan(50_000);
   expect(failures.slice(0, 8)).toEqual([]);
 });
 
@@ -117,8 +148,10 @@ test("the legal-history generator rejects what FIDE forbids", () => {
   expect(isLegalHistory([B, B, B])).toBeFalse();
   expect(isLegalHistory([W, W, B, B])).toBeTrue();
   expect(isLegalHistory([W, W, B, W])).toBeTrue();
+  expect(isLegalHistory([W, Color.BYE, W, Color.BYE, W])).toBeFalse();
   expect(legalHistories(4).length).toBeGreaterThan(4);
   expect(legalHistories(4).every(isLegalHistory)).toBeTrue();
+  expect(legalHistories(4, [W, B, Color.BYE]).every(isLegalHistory)).toBeTrue();
 });
 
 /**

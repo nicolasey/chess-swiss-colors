@@ -58,14 +58,15 @@ neither the colour difference nor "the two latest rounds".
 | CP-3 | 1.7.2 | Difference of exactly ±1 → strong for the minority colour | `[B,W,B]` → strong White | `when_high`, `after_round_one` | ✅ |
 | CP-4 | 1.7.1 | Difference beyond ±1 → absolute for the minority colour | 5W/1B → absolute Black | `it_should_never_return_a_level_outside_the_enum` | ✅ |
 | CP-5 | 1.7.1 | Same colour in the two latest played rounds → **absolute** for the opposite colour | `[W,B,B]` → absolute White | `when_two_in_a_row` | ✅ |
-| **CP-6** | **1.7.1** | **CP-5 applies whatever the colour difference is — the two triggers are alternatives, not a rule plus a modifier** | **`[W,W,B,B]` → absolute White** | **none** | ❌ **returns mild** |
-| CP-7 | 1.7.1 | When CP-5 fires, the preference colour comes from the repeated colour, not from the count | last two Black → White, even if Black is the majority | none | ⚠️ derived from the count; unreachable on legal input |
+| CP-6 | 1.7.1 | CP-5 applies whatever the colour difference is — the two triggers are alternatives, not a rule plus a modifier | `[W,W,B,B]` → absolute White | `CP-6:` ×2 | ✅ |
+| CP-7 | 1.7.1 | When CP-5 fires, the preference colour comes from the repeated colour, not from the count | last two Black → White, even if Black is the majority | `CP-7:` | ✅ |
 | CP-8 | 1.6 | Unplayed rounds are excluded from the difference and from "two latest rounds" | `[W,BYE,W]` → absolute Black | `it_should_ignore_byes`, `get_last_two_colors_skips_byes` | ✅ |
 | CP-9 | 1.7 | Level is always one of mild/strong/absolute | never outside the enum | `it_should_never_return_a_level_outside_the_enum` | ✅ |
 
-CP-6 is reachable in ordinary play by round 4 and is the defect with the
+CP-6 was reachable in ordinary play by round 4 and was the defect with the
 largest blast radius: a mild label loses to any strong preference under CA-3,
-which hands the player a third consecutive Black and breaks OUT-2.
+which handed the player a third consecutive Black and broke OUT-2. Fixed by
+testing the two triggers as alternatives, in the order art. 1.7.1 states them.
 
 ## Colour allocation — `assignColors`
 
@@ -74,7 +75,7 @@ Applied in descending priority; the first that resolves the pair wins.
 | ID | Art. | Rule | Expected behaviour | Test | Status |
 |---|---|---|---|---|---|
 | CA-1 | 5.2.1 | Grant both preferences when they differ | Black-pref vs White-pref → each gets theirs | `when_diff_preference` | ✅ |
-| **CA-2** | **1.7.4** | **One player has no preference → the opponent's preference is granted** | **bye-only vs White-pref → opponent gets White** | **none** | ❌ **opponent denied in one argument order** |
+| CA-2 | 1.7.4 | One player has no preference → the opponent's preference is granted | bye-only vs White-pref → opponent gets White | `CA-2:` ×3 | ✅ |
 | CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `CA-3:` ×4 | ✅ both colours |
 | **CA-4** | **5.2.2** | **Both absolute and identical (topscorers only) → grant the wider colour difference** | **diff +3 outranks diff +2** | **none** | ⛔ **not implementable — `ColorState` discards the magnitude** |
 | CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `CA-5:` ×2 | ✅ |
@@ -135,23 +136,34 @@ natural targets for property-based tests over generated tournaments.
 
 | ID | Art. | Rule | Expected behaviour | Status |
 |---|---|---|---|---|
-| OUT-1 | C.04.1 r6 | Colour difference stays within ±2 | no assignment pushes a player past ±2 | ⛔ unenforced |
-| OUT-2 | C.04.1 r7 | Never the same colour three rounds running | no assignment gives a third repeat | ⛔ unenforced |
+| OUT-1 | C.04.1 r6 | Colour difference stays within ±2 | no assignment pushes a player past ±2 | ✅ |
+| OUT-2 | C.04.1 r7 | Never the same colour three rounds running | no assignment gives a third repeat | ✅ |
 | OUT-3 | C.04.1 r8 | Prefer the colour played less; alternate when balanced | CP-2/CP-3 in aggregate | ✅ via CP rules |
 | OUT-4 | — | The two colours go to the two players passed in, and differ | no duplicate or foreign id | ✅ `expectValidAssignment` |
 
-OUT-1 and OUT-2 hold only if callers respect PC-1 *and* CP-6 is fixed. They are
-consequences of the preference rules, not separately checked — which is why
-CP-6 silently produces an OUT-2 violation rather than an error.
+OUT-1 and OUT-2 hold only if callers respect PC-1. They are consequences of the
+preference rules rather than anything the assigner enforces directly, which is
+why a mislabelled preference produced an illegal colour rather than an error —
+so they are checked by sweep, not by example. Every legal history up to nine
+rounds is paired against every other, and again to six rounds with byes in the
+alphabet so the two players' games fall out of step and CA-5 has to align them.
+Over 50,000 compatible pairs in each sweep, no illegal colour.
 
 ## Coverage summary
 
 | Status | Count | IDs |
 |---|---|---|
-| ✅ correct and covered | 19 | CP-1…CP-5, CP-8, CP-9, CA-1, CA-3, CA-5…CA-8, PC-1…PC-3, TS-1, OUT-3, OUT-4 |
-| ❌ failing test, defect confirmed | 5 | CP-6, CP-7, CA-2, OUT-1, OUT-2 |
+| ✅ correct and covered | 24 | CP-1…CP-9, CA-1…CA-3, CA-5…CA-8, PC-1…PC-3, TS-1, OUT-1…OUT-4 |
 | ⛔ absent or not implementable | 3 | CA-4, PC-4, PC-5 |
 | ⚠️ no test possible | 1 | TS-2 |
+
+The three remaining gaps are one feature, not three defects: art. 2.1.3 [C3]
+exempts topscorers from the same-absolute-preference prohibition (PC-4) so that
+they *can* be paired in the final round, and art. 5.2.2's wider-difference
+clause (CA-4) exists to resolve exactly that pair. `isTopPlayer` and
+`ColorPreference.OFF_GRID` are the unwired halves of it. PC-5 is a separate
+open question: whether `assignColors` should refuse a pair FIDE forbids or go
+on trusting the caller.
 
 Every ID above must appear somewhere under `tests/`; the last test in
 `tests/fide-invariants.test.ts` fails the suite if one does not. That gate found
