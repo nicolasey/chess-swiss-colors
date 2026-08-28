@@ -5,30 +5,41 @@ import { Color, getOppositeColor } from "./color.enum";
 export function getColorPreference(colorHistory: Color[]): ColorState {
   const white = colorHistory.filter((item) => item === Color.WHITE).length;
   const black = colorHistory.filter((item) => item === Color.BLACK).length;
-  let diff = Math.abs(white - black);
-
-  const lastPlayedColor = getLastPlayedColor(colorHistory);
+  const diff = Math.abs(white - black);
 
   const lastTwoColors = getLastTwoColors(colorHistory);
-  const lastTwoColorsAreSame = lastTwoColors
-    ? lastTwoColors[0] === lastTwoColors[1]
-    : false;
 
+  /**
+   * FIDE C.04.3 art. 1.7.1
+   * The colour difference and the two-in-a-row rule are alternative triggers,
+   * either of which makes a preference absolute. Both the level and the
+   * direction come from whichever one fired, so this is tested before the
+   * balanced case below: a balanced history can still end in a repeated colour.
+   */
+  if (lastTwoColors && lastTwoColors[0] === lastTwoColors[1])
+    return {
+      colorPreference: getOppositeColor(lastTwoColors[0]),
+      colorPreferenceLevel: ColorPreference.ABSOLUTE,
+    };
+
+  /**
+   * art. 1.7.3 — mild: alternate from the previous game.
+   * art. 1.7.4 — a player who has played nothing has no preference, which
+   * getLastPlayedColor reports as BYE and getOppositeColor passes through.
+   */
   if (diff === 0)
     return {
-      colorPreference: lastPlayedColor
-        ? getOppositeColor(lastPlayedColor)
-        : Color.BYE,
+      colorPreference: getOppositeColor(getLastPlayedColor(colorHistory)),
       colorPreferenceLevel: ColorPreference.LOW,
     };
 
-  // If last two colors are same, then override diff to absolute (FIDE C04.1 g)
-  if (lastTwoColorsAreSame) diff = ColorPreference.ABSOLUTE;
-
+  /**
+   * art. 1.7.1/1.7.2 — strong at a difference of one, absolute beyond it. A
+   * difference of two or more is already absolute; there is no stronger degree.
+   * OFF_GRID is set explicitly by the caller, never derived here.
+   */
   return {
     colorPreference: white > black ? Color.BLACK : Color.WHITE,
-    // A difference of two or more is already absolute; there is no stronger
-    // degree. OFF_GRID is set explicitly by the caller, never derived here.
     colorPreferenceLevel: Math.min(
       diff,
       ColorPreference.ABSOLUTE,
