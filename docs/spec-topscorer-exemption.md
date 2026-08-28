@@ -3,7 +3,7 @@
 Closes the last colour-rule gap: [#5](https://github.com/nicolasey/chess-swiss-colors/issues/5), expectations **PC-4** and **CA-4** in
 [fide-colour-rules.md](fide-colour-rules.md).
 
-Status: **draft — one blocking question in §3.**
+Status: **ready to implement.** The question in §3 is resolved.
 
 ## 1. What this delivers
 
@@ -30,22 +30,29 @@ The r6/r7 escape clauses are load-bearing here. A permitted topscorer pair
 *will* push someone past ±2 or into a third consecutive colour — that is the
 point of the exception, not a defect in it.
 
-## 3. Blocking question
+## 3. Resolved — the exemption lifts when *either* player is a topscorer
 
-[C3]'s subject is plural: *non-topscorers* shall not meet. Two readings:
+[C3]'s subject is plural, which left two readings: the prohibition applies only
+to a pair of two non-topscorers (a), or it survives while either player is a
+non-topscorer (b). They differ exactly for a mixed pair, which is common in a
+final-round top bracket.
 
-- **(a) Both must be non-topscorers** for the prohibition to apply — so it lifts
-  as soon as *either* player is a topscorer.
-- **(b) Either being a non-topscorer** keeps the prohibition — so it lifts only
-  when *both* are topscorers.
+**Reading (a) is correct.** The prohibition names a pair of non-topscorers; one
+topscorer in the pair takes it outside [C3]'s scope entirely. Two independent
+confirmations:
 
-(a) is the literal reading. (b) is the conservative one. They differ only for a
-mixed pair, which in a final-round top bracket is common, so this is not
-academic.
+- The handbook text itself — [C.04.3 art. 2.1.3](https://handbook.fide.com/chapter/C0403202602),
+  read against art. 1.8.
+- The Dutch-algorithm literature describes [C3] as relaxed for topscorers and
+  their opponents in the last round, not only for topscorer-versus-topscorer
+  pairs — see [Biró et al. on pairing mechanisms](https://real.mtak.hu/80729/7/jXaio4T11ygd57-77-86.pdf)
+  and [JaVaFo](https://www.rrweb.org/javafo/JaVaFo1.html), the reference
+  implementation of C.04.3.
 
-**Resolve against a reference implementation (JaVaFo or Vega) before coding.**
-Everything below is written for (a) and is a one-line change if it turns out to
-be (b).
+So `isColorCompatible` lifts the prohibition on `one.isTopscorer ||
+two.isTopscorer`, as drafted in §5.3. Art. 1.8 also confirms topscorers exist
+only when pairing the **final round**, which is why §4 leaves the call to the
+caller: nothing in this package knows which round it is.
 
 ## 4. Who decides that a player is a topscorer
 
