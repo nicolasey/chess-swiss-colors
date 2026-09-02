@@ -30,9 +30,11 @@ const bobHistory = [Color.BLACK, Color.WHITE, Color.BLACK];
 
 // 1. Derive each player's color state from their color history
 const aliceState = getColorPreference(aliceHistory);
-// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.STRONG }
+// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.STRONG,
+//     colorDifference: 1 }
 const bobState = getColorPreference(bobHistory);
-// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.STRONG }
+// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.STRONG,
+//     colorDifference: -1 }
 
 // 2. Assign colors to a pair
 assignColors(
@@ -55,6 +57,31 @@ assignColors(
 // → { white: "bob", black: "alice" }
 ```
 
+## Upgrading to 0.3.0
+
+Breaking, all mechanical. No behaviour you were relying on changes silently.
+
+| Before | After | Why |
+|---|---|---|
+| `ColorPreference.LOW` | `ColorPreference.MILD` | art. 1.7.3's own word |
+| `ColorPreference.HIGH` | `ColorPreference.STRONG` | art. 1.7.2's own word |
+| `ColorPreference.OFF_GRID` | *(removed)* | had no FIDE counterpart and was never derived; use `isFinalRoundTopscorer` |
+| `isTopPlayer(player)` | `isTopscorer(player)` | art. 1.8's own word |
+| `ColorState` had two fields | now three | `colorDifference` is required |
+
+The enum's numeric values are unchanged, so `MILD`/`STRONG`/`ABSOLUTE` still
+compare by strength and anything persisted as a number still reads back the same.
+
+`ColorState` gaining `colorDifference` only affects states you build by hand;
+anything coming out of `getColorPreference` carries it already. Art. 5.2.2's
+second clause needs the signed value, and no cap on the level can stand in for it.
+
+One behaviour changed: step 5 of `assignColors` used to compare
+`Math.abs(colorDifference)`. It compares the deficit now. Same answer whenever
+the two players sit on the same side of balance — which is every pair whose
+preference is absolute *because of* the difference — and the correct one when
+they do not.
+
 ## API
 
 ### `getColorPreference(history: Color[]): ColorState`
@@ -72,6 +99,15 @@ balanced history can still be absolute (art. 1.7.1):
 | Diff of 1 | minority color, `STRONG` |
 | Diff of 2+ | minority color, `ABSOLUTE` |
 
+The level names are FIDE's own (art. 1.7.1-1.7.3: absolute, strong, mild).
+
+All three fields are returned, and none is derivable from the others. The two
+absolute triggers are alternatives, so `ABSOLUTE` says nothing about the size of
+`colorDifference`: `[W,B,W,W,B,B]` is balanced at `0` and absolute for White,
+while `[W,B,W,B]` is balanced at `0` and only mild. `colorDifference` is signed
+per art. 1.6 — White games minus Black — so a preference for White comes with a
+negative one, and that sign is what `assignColors` step 5 needs.
+
 ### `assignColors(playerOne, playerTwo, randomColor): ColorAssignment`
 
 Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
@@ -82,8 +118,12 @@ Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
 2. Exactly one has no preference → the other's is granted (1.7.4).
 3. Different preferences → both get what they want (5.2.1).
 4. Same preference, different level → the stronger wins (5.2.2).
-5. Same preference, both absolute → the wider color difference wins (5.2.2).
-   Equal magnitudes fall through to the next rule.
+5. Same preference, both absolute → the wider color difference wins (5.2.2),
+   measured *against the color asked for*: a player wanting white is short by
+   `-colorDifference`, one wanting black by `+colorDifference`, and the needier
+   of the two takes it. Equal deficits fall through to the next rule, which is
+   the common case. Reachable only for a pair `isColorCompatible` permits, so
+   in practice only when a topscorer is involved.
 6. Same preference and level → the most recent game in which the two held
    different colors decides; whoever had black there now gets white (5.2.3).
 7. Still tied → higher rank wins: score first, then lowest pairing
@@ -104,9 +144,14 @@ forbids and nothing here will notice.
 
 ### `isTopscorer(player): boolean`
 
-`score > history.length / 2`. History is assumed to include forfeits, so its
-length equals the number of rounds played. Used to decide who may bypass an
-absolute preference in the last round.
+`score > history.length / 2` — art. 1.8's topscorer, above 50% of the maximum
+possible. History is assumed to include forfeits and byes, so its length equals
+the number of rounds played, and a win is assumed to be worth one point.
+
+It answers the **score** half of art. 1.8 only. The definition also requires
+that you are pairing the final round, which this library cannot check — see
+`isFinalRoundTopscorer` above. Use this to find your topscorers, then set the
+flag yourself.
 
 ### `evaluateColorHistory(historyOne, historyTwo): ColorDiff | null`
 

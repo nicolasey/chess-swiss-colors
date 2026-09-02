@@ -183,21 +183,42 @@ The resolution order gains one step. Today 5.2.2 is reached only when the levels
 5.2.4   otherwise                              → higher ranked
 ```
 
+> **Correction (implemented).** This section first read "both players want the
+> same colour and want it absolutely, **so their differences share a sign**".
+> That is false, and the first implementation inherited it. Art. 1.7.1's two
+> triggers are alternatives, so the two-in-a-row one makes a preference absolute
+> at *any* difference, either side of zero: `W,B,B` is absolute White at −1 and
+> `W,W,B,W,W,B,B` is absolute White at +1. On `Math.abs` those two tie, and a +1
+> beats a balanced 0 — handing White to the player who has already had more of
+> it, which inverts what the rule is for. The comparison is on the **deficit**:
+> the difference oriented by the colour the player is asking for, so more always
+> means needier. The table below is unaffected — both its players are on the
+> same side — but it is no longer the whole story.
+
 ```ts
 /**
  * FIDE C.04.3 art. 5.2.2, second clause. Both players want the same colour and
- * want it absolutely, so their differences share a sign; the wider magnitude
- * takes the colour. Returns null when they are equal, leaving 5.2.3 to decide.
+ * want it absolutely; the one further from balance *in that colour* takes it.
+ * Returns null when the deficits are equal, leaving 5.2.3 to decide.
  */
 function assignByWiderDifference(one, two): ColorAssignment | null {
-  const oneWidth = Math.abs(one.colorDifference);
-  const twoWidth = Math.abs(two.colorDifference);
-  if (oneWidth === twoWidth) return null;
-  const winner = oneWidth > twoWidth ? one : two;
+  const oneDeficit = deficitOfPreferredColor(one);
+  const twoDeficit = deficitOfPreferredColor(two);
+  if (oneDeficit === twoDeficit) return null;
+  const winner = oneDeficit > twoDeficit ? one : two;
   const loser = winner === one ? two : one;
   return winner.colorPreference === Color.WHITE
     ? { white: winner.playerId, black: loser.playerId }
     : { white: loser.playerId, black: winner.playerId };
+}
+
+// art. 1.6 signs the difference White-minus-Black, so a player wanting White is
+// short by its negation. Comparable only between players wanting the same
+// colour — the only place this clause is reached.
+function deficitOfPreferredColor(player): number {
+  return player.colorPreference === Color.WHITE
+    ? -player.colorDifference
+    : player.colorDifference;
 }
 ```
 
@@ -226,6 +247,7 @@ The tie path is therefore the common one, not the exotic one. Test it first.
 | PC-4 | 2.1.3 | Same absolute preference, neither a topscorer → **incompatible** (unchanged) |
 | PC-4 | 2.1.3 | `isFinalRoundTopscorer` absent behaves exactly as `false` |
 | CA-4 | 5.2.2 | Both absolute, same preference, differences −2 vs −1 → the −2 player gets White |
+| CA-4 | 5.2.2 | Both absolute White at +1 and 0 → the **0** player gets White; magnitude would say the opposite |
 | CA-4 | 5.2.2 | Differences equal → falls through to 5.2.3, then 5.2.4 |
 | CA-4 | — | Order independence holds on both paths (CA-8) |
 | OUT-1/2 | C.04.1 r6/r7 | A permitted topscorer pair **may** breach ±2 or three-in-a-row; every other pair may not |

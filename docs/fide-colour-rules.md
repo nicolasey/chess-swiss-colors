@@ -77,11 +77,19 @@ Applied in descending priority; the first that resolves the pair wins.
 | CA-1 | 5.2.1 | Grant both preferences when they differ | Black-pref vs White-pref → each gets theirs | `when_diff_preference` | ✅ |
 | CA-2 | 1.7.4 | One player has no preference → the opponent's preference is granted | bye-only vs White-pref → opponent gets White | `CA-2:` ×3 | ✅ |
 | CA-3 | 5.2.2 | Same preference, different strength → the stronger is granted | absolute beats strong beats mild | `CA-3:` ×4 | ✅ both colours |
-| CA-4 | 5.2.2 | Both absolute and identical (topscorers only) → grant the wider colour difference | magnitude 2 outranks magnitude 1; equal magnitudes fall through to CA-5 | `CA-4:` ×2 | ✅ |
+| CA-4 | 5.2.2 | Both absolute and identical (topscorers only) → grant the wider colour difference, measured against the colour asked for | a deficit of 2 outranks one of 1; +1 loses to a balanced 0, both absolute White; equal deficits fall through to CA-5 | `CA-4:` ×3 | ✅ |
 | CA-5 | 5.2.3 | Otherwise alternate from the most recent round in which the two played different colours | whoever had Black there now gets White | `CA-5:` ×2 | ✅ |
 | CA-6 | 5.2.4 | Otherwise grant the higher-ranked player's preference | lower TPN wins | `when_same`, `when_same_but_score_diff` | ✅ |
 | CA-7 | 5.2.5 | Neither has a preference → initial-colour to the higher-ranked player on an odd TPN, opposite on an even one | round 1 | `round_one_gives_the_drawn_colour_by_pairing_parity` | ✅ |
 | CA-8 | — | Argument order must not change the result | `f(a,b) === f(b,a)` | `CA-8:` + `expectValidAssignment` | ✅ |
+
+CA-4 note: "wider" is the difference **oriented by the colour the player wants**
+— −`colorDifference` for White, +`colorDifference` for Black — not its
+magnitude. Art. 1.7.1's two triggers are alternatives, so two players absolute
+for the same colour can sit on opposite sides of balance: `W,B,B` is absolute
+White at −1, `W,W,B,W,W,B,B` is absolute White at +1. Magnitude calls those
+equal and ranks +1 above a balanced 0, which grants the colour to the player
+already over-supplied with it. The deficit makes more mean needier.
 
 CA-5 note: the old `when_same_absolute_diff_color_history` was named for this
 rule but never reached it — its two histories were identical over the compared
