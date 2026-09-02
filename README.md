@@ -72,9 +72,6 @@ balanced history can still be absolute (art. 1.7.1):
 | Diff of 1 | minority color, `HIGH` |
 | Diff of 2+ | minority color, `ABSOLUTE` |
 
-`OFF_GRID` is never derived here — set it yourself when a system grants a
-last-round exception to a top player.
-
 ### `assignColors(playerOne, playerTwo, randomColor): ColorAssignment`
 
 Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
@@ -121,7 +118,7 @@ over their common length.
 
 ```ts
 enum Color { WHITE = "W", BLACK = "B", BYE = "BYE" }
-enum ColorPreference { LOW = 0, HIGH = 1, ABSOLUTE = 2, OFF_GRID = 3 }
+enum ColorPreference { LOW = 0, HIGH = 1, ABSOLUTE = 2 }
 
 type ColorState = {
   colorPreference: Color;
@@ -148,8 +145,9 @@ Also exported: `getOppositeColor`, `getLastPlayedColor`, `getLastTwoColors`,
 - **The random color is physical.** FIDE requires the higher-ranked player to
   draw a color before round 1. Your software should ask the arbiter for it at
   tournament start and pass the same value to every `assignColors` call.
-- **Last-round exceptions are yours to apply.** This library never sets
-  `OFF_GRID` on its own; combine `isTopPlayer` with your system's rules.
+- **Last-round exceptions are yours to apply.** Combine `isTopPlayer` with your
+  system's rules to decide who is a topscorer, then set
+  `isFinalRoundTopscorer` — that flag is the only thing that lifts [C3].
 - **`Color.BYE` covers every unplayed round** — byes, forfeits, absences. FIDE
   needs no distinction between them for color: only games played count.
 - **`assignColors` recommends, it does not decide.** This package computes

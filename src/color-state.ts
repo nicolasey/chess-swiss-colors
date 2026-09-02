@@ -39,7 +39,6 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
   /**
    * art. 1.7.1/1.7.2 — strong at a difference of one, absolute beyond it. A
    * difference of two or more is already absolute; there is no stronger degree.
-   * OFF_GRID is set explicitly by the caller, never derived here.
    */
   return {
     colorPreference: white > black ? Color.BLACK : Color.WHITE,

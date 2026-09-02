@@ -35,7 +35,6 @@ handbook before changing behaviour.
 | Topscorer | Score above 50% of the maximum possible, when pairing the **final** round (1.8) | `PlayerColorState.isFinalRoundTopscorer`, declared by the caller; `isTopPlayer` is a helper |
 | TPN | Tournament Pairing Number; lower = higher ranked | `pairingNb` |
 | Initial-colour | Colour drawn by lot before round 1 | `randomColor` |
-| — | no FIDE counterpart | `ColorPreference.OFF_GRID` |
 
 `Color.BYE` covers **every unplayed round** — pairing-allocated byes, half-point
 byes, forfeits, absences. FIDE needs no separate forfeit colour: art. 1.6 counts
@@ -112,11 +111,13 @@ the handbook settled it.
 | PC-4 | 2.1.3 [C3] | The prohibition is restricted to non-topscorers; one topscorer in the pair lifts it | absolute-White pair with a topscorer → compatible | `PC-4:` ×4 | ✅ |
 | PC-5 | — | `assignColors` is advisory: it recommends colours and never refuses on rule grounds | a [C3]-forbidden pair still gets a well-formed recommendation | `PC-5:` ×2 | ✅ decided |
 
-PC-4 and CA-4 are the same missing feature seen from two sides. [C3] restricts
-the prohibition to non-topscorers precisely so that topscorers *can* be paired
-with matching absolute preferences in the final round — and 5.2.2's wider-
-difference clause exists to resolve exactly that pair. The library has
-`isTopPlayer` and an `OFF_GRID` level but wires neither into the decision.
+PC-4 and CA-4 are the same feature seen from two sides. [C3] restricts the
+prohibition to non-topscorers precisely so that topscorers *can* be paired with
+matching absolute preferences in the final round — and 5.2.2's wider-difference
+clause exists to resolve exactly that pair. Both are now wired to
+`isFinalRoundTopscorer`. An `OFF_GRID` preference level once stood in for the
+exemption; it never had a FIDE counterpart, nothing ever derived it, and it has
+been removed in favour of the flag.
 
 PC-5 note: this package computes colours for a higher Swiss engine that owns
 the pairing. Only that engine can act on an incompatibility — by building a
