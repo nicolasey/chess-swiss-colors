@@ -527,6 +527,72 @@ test("CA-4: the_wider_colour_difference_takes_the_colour", () => {
 });
 
 /**
+ * CA-4 — the two absolute preferences need not share a sign, so the clause is
+ * decided on the deficit rather than on |colorDifference|.
+ *
+ * Both are absolute for White, but playerOne is at +1 — a game of White to the
+ * good, absolute only through the two-in-a-row trigger — while playerTwo is
+ * balanced at 0. playerTwo is the needier of the two and takes White.
+ *
+ * |+1| > |0| would have said the opposite, and so would both fallbacks:
+ * playerOne is the higher ranked, and the histories agree over their common
+ * length so 5.2.3 has nothing to say and 5.2.4 would grant playerOne. Every
+ * other route through assignColors gives White to playerOne.
+ */
+test("CA-4: the_wider_deficit_takes_the_colour_across_opposite_signs", () => {
+  const oneHistory = [
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ];
+  const twoHistory = [
+    Color.WHITE,
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 1,
+      score: 2,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 2,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  // The premise: same colour, both absolute, and on opposite sides of balance.
+  expect(playerOne.colorPreference).toBe(Color.WHITE);
+  expect(playerTwo.colorPreference).toBe(Color.WHITE);
+  expect(playerOne.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerTwo.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerOne.colorDifference).toBe(1);
+  expect(playerTwo.colorDifference).toBe(0);
+
+  // ...so magnitude ranks playerOne first and the deficit ranks playerTwo.
+  expect(Math.abs(playerOne.colorDifference)).toBeGreaterThan(
+    Math.abs(playerTwo.colorDifference),
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+/**
  * CA-4 — equal magnitudes leave the clause with nothing to say, and 5.2.3
  * decides. This is the common path, not the exotic one: r6 caps the difference
  * at ±2, so two players absolute *because of* their difference always tie.

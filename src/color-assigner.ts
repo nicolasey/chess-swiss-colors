@@ -141,15 +141,25 @@ function assignColorsMostAsked(
 
 /**
  * FIDE C.04.3 art. 5.2.2, second clause
- * Both players hold the same absolute preference, so their colour differences
- * share a sign and only the magnitude separates them: the wider one takes the
- * colour. [C3] permits such a pair for topscorers only.
+ * Both players hold the same absolute preference, so only the colour difference
+ * separates them: the one further from balance takes the colour it wants.
  *
- * Returns null when the magnitudes are equal, which leaves art. 5.2.3 to
- * decide. That is the common outcome rather than the exception: C.04.1 r6 caps
- * the difference at ±2, so a preference absolute *because of* the difference is
+ * "Wider" is measured against the colour the player is asking for, not as a
+ * magnitude. Art. 1.7.1 has two alternative triggers, and the two-in-a-row one
+ * fires whatever the difference is — so two players absolute for the same
+ * colour need not be on the same side of zero. W,B,B is absolute for White at
+ * −1; W,W,B,W,W,B,B is absolute for White at +1, already a game of White to the
+ * good. Comparing |−1| with |+1| calls those equal, and comparing |+1| with a
+ * balanced |0| hands White to the player who has had more of it.
+ *
+ * The deficit orients the difference by what the player wants, so more always
+ * means needier, and art. 1.6's sign does the work rather than being discarded.
+ *
+ * Returns null when the deficits are equal, which leaves art. 5.2.3 to decide.
+ * That is the common outcome rather than the exception: C.04.1 r6 caps the
+ * difference at ±2, so a preference absolute *because of* the difference is
  * always exactly ±2. The clause separates players only when one of them is
- * absolute through the two-in-a-row trigger at a smaller difference.
+ * absolute through the two-in-a-row trigger at some other difference.
  *
  * @param playerOne PlayerColorState
  * @param playerTwo PlayerColorState
@@ -159,17 +169,33 @@ function assignByWiderDifference(
   playerOne: PlayerColorState,
   playerTwo: PlayerColorState,
 ): ColorAssignment | null {
-  const oneWidth = Math.abs(playerOne.colorDifference);
-  const twoWidth = Math.abs(playerTwo.colorDifference);
+  const oneDeficit = deficitOfPreferredColor(playerOne);
+  const twoDeficit = deficitOfPreferredColor(playerTwo);
 
-  if (oneWidth === twoWidth) return null;
+  if (oneDeficit === twoDeficit) return null;
 
-  const wider = oneWidth > twoWidth ? playerOne : playerTwo;
+  const wider = oneDeficit > twoDeficit ? playerOne : playerTwo;
   const other = wider === playerOne ? playerTwo : playerOne;
 
   return wider.colorPreference === Color.WHITE
     ? { white: wider.playerId, black: other.playerId }
     : { white: other.playerId, black: wider.playerId };
+}
+
+/**
+ * How many games short of balance the player is *in the colour they want*.
+ *
+ * Art. 1.6 makes the colour difference White minus Black, so a player wanting
+ * White is short by −colorDifference and one wanting Black by +colorDifference.
+ * Positive means owed that colour, negative means already over-supplied.
+ *
+ * Only comparable between players who want the same colour, which is the only
+ * place art. 5.2.2's second clause is reached.
+ */
+function deficitOfPreferredColor(player: PlayerColorState): number {
+  return player.colorPreference === Color.WHITE
+    ? -player.colorDifference
+    : player.colorDifference;
 }
 
 function isEven(integer: number): boolean {
