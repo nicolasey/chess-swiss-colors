@@ -30,9 +30,9 @@ const bobHistory = [Color.BLACK, Color.WHITE, Color.BLACK];
 
 // 1. Derive each player's color state from their color history
 const aliceState = getColorPreference(aliceHistory);
-// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.HIGH }
+// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.STRONG }
 const bobState = getColorPreference(bobHistory);
-// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.HIGH }
+// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.STRONG }
 
 // 2. Assign colors to a pair
 assignColors(
@@ -67,9 +67,9 @@ balanced history can still be absolute (art. 1.7.1):
 | History | Result |
 |---|---|
 | Same color in the two latest games played | **opposite of that color, `ABSOLUTE`** |
-| Balanced, last game played | opposite of last color, `LOW` |
-| Balanced, no game played | `Color.BYE` — no preference, `LOW` |
-| Diff of 1 | minority color, `HIGH` |
+| Balanced, last game played | opposite of last color, `MILD` |
+| Balanced, no game played | `Color.BYE` — no preference, `MILD` |
+| Diff of 1 | minority color, `STRONG` |
 | Diff of 2+ | minority color, `ABSOLUTE` |
 
 ### `assignColors(playerOne, playerTwo, randomColor): ColorAssignment`
@@ -102,7 +102,7 @@ only when pairing the final round.** This package has no round counter and
 cannot infer one, so setting it in an earlier round produces pairings FIDE
 forbids and nothing here will notice.
 
-### `isTopPlayer(player): boolean`
+### `isTopscorer(player): boolean`
 
 `score > history.length / 2`. History is assumed to include forfeits, so its
 length equals the number of rounds played. Used to decide who may bypass an
@@ -118,7 +118,7 @@ over their common length.
 
 ```ts
 enum Color { WHITE = "W", BLACK = "B", BYE = "BYE" }
-enum ColorPreference { LOW = 0, HIGH = 1, ABSOLUTE = 2 }
+enum ColorPreference { MILD = 0, STRONG = 1, ABSOLUTE = 2 }
 
 type ColorState = {
   colorPreference: Color;
@@ -145,7 +145,7 @@ Also exported: `getOppositeColor`, `getLastPlayedColor`, `getLastTwoColors`,
 - **The random color is physical.** FIDE requires the higher-ranked player to
   draw a color before round 1. Your software should ask the arbiter for it at
   tournament start and pass the same value to every `assignColors` call.
-- **Last-round exceptions are yours to apply.** Combine `isTopPlayer` with your
+- **Last-round exceptions are yours to apply.** Combine `isTopscorer` with your
   system's rules to decide who is a topscorer, then set
   `isFinalRoundTopscorer` — that flag is the only thing that lifts [C3].
 - **`Color.BYE` covers every unplayed round** — byes, forfeits, absences. FIDE

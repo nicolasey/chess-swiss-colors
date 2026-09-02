@@ -6,7 +6,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
   const white = colorHistory.filter((item) => item === Color.WHITE).length;
   const black = colorHistory.filter((item) => item === Color.BLACK).length;
   const colorDifference = white - black; // art. 1.6, signed
-  const diff = Math.abs(colorDifference);
+  const magnitude = Math.abs(colorDifference); // art. 1.6, unsigned
 
   const lastTwoColors = getLastTwoColors(colorHistory);
 
@@ -29,10 +29,10 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
    * art. 1.7.4 — a player who has played nothing has no preference, which
    * getLastPlayedColor reports as BYE and getOppositeColor passes through.
    */
-  if (diff === 0)
+  if (magnitude === 0)
     return {
       colorPreference: getOppositeColor(getLastPlayedColor(colorHistory)),
-      colorPreferenceLevel: ColorPreference.LOW,
+      colorPreferenceLevel: ColorPreference.MILD,
       colorDifference,
     };
 
@@ -43,7 +43,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
   return {
     colorPreference: white > black ? Color.BLACK : Color.WHITE,
     colorPreferenceLevel: Math.min(
-      diff,
+      magnitude,
       ColorPreference.ABSOLUTE,
     ) as ColorPreference,
     colorDifference,

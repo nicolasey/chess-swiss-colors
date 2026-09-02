@@ -12,7 +12,7 @@ test("CP-1: when_nothing_happened", () => {
   const result = getColorPreference([]);
 
   expect(result.colorPreference).toBe(Color.BYE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
 });
 
 test("CP-3: after_round_one", () => {
@@ -20,7 +20,7 @@ test("CP-3: after_round_one", () => {
     const result = getColorPreference([color]);
 
     expect(result.colorPreference).toBe(getOppositeColor(color));
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.STRONG);
   }
 });
 
@@ -30,17 +30,17 @@ test("CP-2: when_balanced", () => {
     const result = getColorPreference([getOppositeColor(lastPlayed), lastPlayed]);
 
     expect(result.colorPreference).toBe(getOppositeColor(lastPlayed));
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
   }
 });
 
-test("CP-3: when_high", () => {
+test("CP-3: when_strong", () => {
   for (const majority of [Color.WHITE, Color.BLACK]) {
     const minority = getOppositeColor(majority);
     const result = getColorPreference([majority, minority, majority]);
 
     expect(result.colorPreference).toBe(minority);
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.STRONG);
   }
 });
 
@@ -71,7 +71,7 @@ test("CP-8: it_should_ignore_byes", () => {
   result = getColorPreference([Color.WHITE, Color.BYE, Color.BLACK]);
 
   expect(result.colorPreference).toBe(Color.WHITE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
 });
 
 test("it_should_not_mutate_the_history_it_is_given", () => {

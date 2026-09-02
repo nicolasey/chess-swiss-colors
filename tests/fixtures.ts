@@ -20,7 +20,7 @@ export const differenceFor = (
   const magnitude =
     colorPreferenceLevel === ColorPreference.ABSOLUTE
       ? 2
-      : colorPreferenceLevel === ColorPreference.HIGH
+      : colorPreferenceLevel === ColorPreference.STRONG
         ? 1
         : 0;
 

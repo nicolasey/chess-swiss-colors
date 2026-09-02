@@ -71,12 +71,12 @@ const assign = (
 };
 
 test("CA-7: when_no_preference", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BYE, ColorPreference.LOW);
+  const playerOne = createPlayerSample(1, 0, Color.BYE, ColorPreference.MILD);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BYE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -107,13 +107,13 @@ test("CA-7: round_one_gives_the_drawn_colour_by_pairing_parity", () => {
       higherPairingNb,
       0,
       Color.BYE,
-      ColorPreference.LOW,
+      ColorPreference.MILD,
     );
     const lower = createPlayerSample(
       lowerPairingNb,
       0,
       Color.BYE,
-      ColorPreference.LOW,
+      ColorPreference.MILD,
       TWO_ID,
     );
 
@@ -131,12 +131,12 @@ test("CA-7: round_one_gives_the_drawn_colour_by_pairing_parity", () => {
 });
 
 test("round_one_requires_pairing_numbers", () => {
-  const playerOne = createPlayerSample(0, 0, Color.BYE, ColorPreference.LOW);
+  const playerOne = createPlayerSample(0, 0, Color.BYE, ColorPreference.MILD);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BYE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -149,12 +149,12 @@ test("round_one_requires_pairing_numbers", () => {
 });
 
 test("CA-1: when_diff_preference", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.WHITE,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -165,7 +165,7 @@ test("CA-1: when_diff_preference", () => {
 });
 
 test("CA-3: when_same_preference_diff_level", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
@@ -181,12 +181,12 @@ test("CA-3: when_same_preference_diff_level", () => {
 });
 
 test("CA-3: when_same_preference_diff_level_second", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BLACK,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -197,12 +197,12 @@ test("CA-3: when_same_preference_diff_level_second", () => {
 });
 
 test("CA-6: when_same", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BLACK,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -213,12 +213,12 @@ test("CA-6: when_same", () => {
 });
 
 test("CA-6: when_same_but_score_diff", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0.5,
     Color.BLACK,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -307,16 +307,16 @@ test("it_should_not_mutate_the_players_it_is_given", () => {
       pairingNb: 1,
       score: 1,
       colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.HIGH,
-      colorDifference: differenceFor(Color.BLACK, ColorPreference.HIGH),
+      colorPreferenceLevel: ColorPreference.STRONG,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.STRONG),
       history: [{ color: Color.WHITE }, { color: Color.BLACK }],
     },
     {
       pairingNb: 2,
       score: 1,
       colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.HIGH,
-      colorDifference: differenceFor(Color.BLACK, ColorPreference.HIGH),
+      colorPreferenceLevel: ColorPreference.STRONG,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.STRONG),
       history: [{ color: Color.BLACK }, { color: Color.BLACK }],
     },
   );
@@ -428,7 +428,7 @@ test("CA-2: an_empty_history_also_grants_the_opponent", () => {
  * suite; a mutation there survived until these were added.
  */
 test("CA-3: when_same_preference_diff_level_white", () => {
-  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
@@ -444,12 +444,12 @@ test("CA-3: when_same_preference_diff_level_white", () => {
 });
 
 test("CA-3: when_same_preference_diff_level_white_second", () => {
-  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.WHITE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -466,10 +466,10 @@ test("CA-3: when_same_preference_diff_level_white_second", () => {
  */
 test("CA-8: the_result_never_depends_on_argument_order", () => {
   const shapes: Array<[Color, ColorPreference, Color, ColorPreference]> = [
-    [Color.BYE, ColorPreference.LOW, Color.BYE, ColorPreference.LOW], // 5.2.5
-    [Color.WHITE, ColorPreference.HIGH, Color.BLACK, ColorPreference.HIGH], // 5.2.1
-    [Color.WHITE, ColorPreference.ABSOLUTE, Color.WHITE, ColorPreference.HIGH], // 5.2.2
-    [Color.BLACK, ColorPreference.LOW, Color.BLACK, ColorPreference.LOW], // 5.2.4
+    [Color.BYE, ColorPreference.MILD, Color.BYE, ColorPreference.MILD], // 5.2.5
+    [Color.WHITE, ColorPreference.STRONG, Color.BLACK, ColorPreference.STRONG], // 5.2.1
+    [Color.WHITE, ColorPreference.ABSOLUTE, Color.WHITE, ColorPreference.STRONG], // 5.2.2
+    [Color.BLACK, ColorPreference.MILD, Color.BLACK, ColorPreference.MILD], // 5.2.4
   ];
 
   for (const [onePref, oneLevel, twoPref, twoLevel] of shapes) {

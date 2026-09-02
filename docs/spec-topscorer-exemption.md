@@ -81,7 +81,7 @@ system. Art. 1.8 depends on two facts this package cannot see:
 2. what the maximum possible score is, which varies with the scoring system and
    with how unplayed rounds are counted.
 
-`isTopPlayer` guesses the second and cannot even attempt the first. It stays
+`isTopscorer` guesses the second and cannot even attempt the first. It stays
 exported as a helper for engines whose assumptions match it, and stops being the
 source of truth for a decision it cannot reliably make. This is the boundary
 already settled for PC-5: the engine owns pairing-level facts.
@@ -332,4 +332,4 @@ the cost is near zero today and permanent the day it publishes.
 
 The pairing engine. This package recommends colours (PC-5); score brackets,
 floaters, the [C1]–[C19] criteria and bye allocation belong to the consumer.
-`isTopPlayer` remains a helper, not a decision-maker.
+`isTopscorer` remains a helper, not a decision-maker.

@@ -30,9 +30,9 @@ handbook before changing behaviour.
 |---|---|---|
 | Colour difference | Rounds played White minus rounds played Black (1.6) | `ColorState.colorDifference`, signed |
 | Absolute preference | 1.7.1 | `ColorPreference.ABSOLUTE` |
-| Strong preference | 1.7.2 | `ColorPreference.HIGH` |
-| Mild preference | 1.7.3 | `ColorPreference.LOW` |
-| Topscorer | Score above 50% of the maximum possible, when pairing the **final** round (1.8) | `PlayerColorState.isFinalRoundTopscorer`, declared by the caller; `isTopPlayer` is a helper |
+| Strong preference | 1.7.2 | `ColorPreference.STRONG` |
+| Mild preference | 1.7.3 | `ColorPreference.MILD` |
+| Topscorer | Score above 50% of the maximum possible, when pairing the **final** round (1.8) | `PlayerColorState.isFinalRoundTopscorer`, declared by the caller; `isTopscorer` is a helper |
 | TPN | Tournament Pairing Number; lower = higher ranked | `pairingNb` |
 | Initial-colour | Colour drawn by lot before round 1 | `randomColor` |
 
@@ -54,7 +54,7 @@ neither the colour difference nor "the two latest rounds".
 |---|---|---|---|---|---|
 | CP-1 | 1.7.4 | A player who has played no games has no preference | `[]` → no preference | `when_nothing_happened` | ✅ |
 | CP-2 | 1.7.3 | Difference of zero → mild, alternating from the previous game | `[B,W]` → mild White | `when_balanced` | ✅ |
-| CP-3 | 1.7.2 | Difference of exactly ±1 → strong for the minority colour | `[B,W,B]` → strong White | `when_high`, `after_round_one` | ✅ |
+| CP-3 | 1.7.2 | Difference of exactly ±1 → strong for the minority colour | `[B,W,B]` → strong White | `when_strong`, `after_round_one` | ✅ |
 | CP-4 | 1.7.1 | Difference beyond ±1 → absolute for the minority colour | 5W/1B → absolute Black | `it_should_never_return_a_level_outside_the_enum` | ✅ |
 | CP-5 | 1.7.1 | Same colour in the two latest played rounds → **absolute** for the opposite colour | `[W,B,B]` → absolute White | `when_two_in_a_row` | ✅ |
 | CP-6 | 1.7.1 | CP-5 applies whatever the colour difference is — the two triggers are alternatives, not a rule plus a modifier | `[W,W,B,B]` → absolute White | `CP-6:` ×2 | ✅ |
@@ -125,7 +125,7 @@ different pair — so `assignColors` recommends and never refuses on rule
 grounds. Screening with `isColorCompatible` is the caller's step. Malformed
 input is not covered by that: a missing pairing number still throws.
 
-## Topscorer — `isTopPlayer`
+## Topscorer — `isTopscorer`
 
 | ID | Art. | Rule | Expected behaviour | Test | Status |
 |---|---|---|---|---|---|

@@ -35,7 +35,7 @@ test("PC-2: when_compatible", () => {
 test("PC-3: same_color_only_one_absolute", () => {
   for (const color of [Color.WHITE, Color.BLACK]) {
     const playerOne = player(1, color, ColorPreference.ABSOLUTE);
-    const playerTwo = player(2, color, ColorPreference.HIGH);
+    const playerTwo = player(2, color, ColorPreference.STRONG);
 
     expect(isColorCompatible(playerOne, playerTwo)).toBeTrue();
     expect(isColorCompatible(playerTwo, playerOne)).toBeTrue();
@@ -100,7 +100,7 @@ test("PC-4: the_flag_absent_behaves_exactly_as_false", () => {
 test("PC-4: the_flag_changes_nothing_for_a_pair_that_was_never_forbidden", () => {
   const topscorer = player(1, Color.WHITE, ColorPreference.ABSOLUTE, true);
   const opposite = player(2, Color.BLACK, ColorPreference.ABSOLUTE, true);
-  const milder = player(3, Color.WHITE, ColorPreference.HIGH, true);
+  const milder = player(3, Color.WHITE, ColorPreference.STRONG, true);
 
   expect(isColorCompatible(topscorer, opposite)).toBeTrue();
   expect(isColorCompatible(topscorer, milder)).toBeTrue();

@@ -37,7 +37,7 @@ mutate src/color-state.ts    's/if \(lastTwoColors \&\& lastTwoColors\[0\] === l
 mutate src/color-state.ts    's/getOppositeColor\(getLastPlayedColor\(colorHistory\)\)/getLastPlayedColor(colorHistory)/'                                                                        '1.7.3  mild alternates from last game'
 mutate src/color-compare.ts  's/if \(color !== Color\.BYE\) withoutByes\.push\(color\);/withoutByes.push(color);/'                                            '1.6    unplayed rounds carry no colour'
 mutate src/color-state.ts    's/const colorDifference = white - black;/const colorDifference = black - white;/'                                            '1.6    difference is signed White minus Black'
-mutate src/top-player.ts     's/return player\.score > half;/return player.score >= half;/'                                                                   '1.8    topscorer is strictly over half'
+mutate src/topscorer.ts     's/return player\.score > half;/return player.score >= half;/'                                                                   '1.8    topscorer is strictly over half'
 mutate src/color-compatibility.ts 's/if \(!sameAbsolutePreference\) return true;/return true;/'                                                             '2.1.3  same absolute preference may not meet'
 mutate src/color-compatibility.ts 's/playerOne\.isFinalRoundTopscorer \|\| playerTwo\.isFinalRoundTopscorer/true/'                                            '2.1.3  exemption lifts only for topscorers'
 
