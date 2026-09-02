@@ -19,16 +19,11 @@ export type ColorState = {
   colorDifference: number;
 };
 
-export type PlayerColorState = {
+export type PlayerColorState = ColorState & {
   // Necessary fields to perform color state evaluation
   playerId: PlayerId;
   pairingNb: number;
   score: number;
-
-  // Color State
-  colorPreference: Color;
-  colorPreferenceLevel: ColorPreference;
-  colorDifference: number;
 
   // History must have color field in
   history: ColorHistoryContract[];
