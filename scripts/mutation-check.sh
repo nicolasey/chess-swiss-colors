@@ -26,7 +26,9 @@ mutate () { # file, perl-expr, label
 }
 
 echo "baseline: $(printf '%s' "$base" | grep -c .) failing"
-mutate src/color-assigner.ts 's/return playerOne\.colorPreference === Color\.BLACK/return playerOne.colorPreference === Color.WHITE/'                        '5.2.1  grant both preferences'
+# 5.2.1 cannot be mutated by removing its branch: when preferences differ, every
+# later rule grants one player theirs and so grants both. Invert the colour.
+mutate src/color-assigner.ts 's/if \(!hasSamePreference\) return grantPreferenceOf\(playerOne, playerTwo\);/if (!hasSamePreference) return award(getOppositeColor(playerOne.colorPreference), playerOne, playerTwo);/' '5.2.1  grant both preferences'
 mutate src/color-assigner.ts 's/playerOne\.colorPreferenceLevel > playerTwo\.colorPreferenceLevel/false/'                                                     '5.2.2  grant the stronger'
 mutate src/color-assigner.ts 's/if \(compare !== null\)/if (false \&\& compare !== null)/'                                                                    '5.2.3  alternate from differing game'
 mutate src/color-assigner.ts 's/const wider = oneDeficit > twoDeficit/const wider = oneDeficit < twoDeficit/'                                               '5.2.2b wider deficit takes the colour'

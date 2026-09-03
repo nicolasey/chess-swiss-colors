@@ -35,7 +35,8 @@ export function assignColors(
   if (oneHasNoPreference) return grantPreferenceOf(playerTwo, playerOne);
   if (twoHasNoPreference) return grantPreferenceOf(playerOne, playerTwo);
 
-  if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
+  // 5.2.1 — preferences differ, so granting one grants the other
+  if (!hasSamePreference) return grantPreferenceOf(playerOne, playerTwo);
   if (hasSamePreference && !hasSameLevel)
     return assignColorsMostAsked(playerOne, playerTwo); // 5.2.2, first clause
 
@@ -77,9 +78,7 @@ function assignColorNoPref(
     ? getOppositeColor(randomColor)
     : randomColor;
 
-  return higherGets === Color.WHITE
-    ? { white: higher.playerId, black: lower.playerId }
-    : { white: lower.playerId, black: higher.playerId };
+  return award(higherGets, higher, lower);
 }
 
 /**
@@ -96,18 +95,27 @@ function grantPreferenceOf(
   player: PlayerColorState,
   opponent: PlayerColorState,
 ): ColorAssignment {
-  return player.colorPreference === Color.WHITE
-    ? { white: player.playerId, black: opponent.playerId }
-    : { white: opponent.playerId, black: player.playerId };
+  return award(player.colorPreference, player, opponent);
 }
 
-function assignColorDiffPref(
-  playerOne: PlayerColorState,
-  playerTwo: PlayerColorState,
+/**
+ * The shape every rule in art. 5.2 ends in: one player takes a colour and the
+ * opponent takes the other. Only the choice of player and colour differs, so
+ * that choice is all each rule above is left holding.
+ *
+ * @param color Color the one `player` receives
+ * @param player PlayerColorState
+ * @param opponent PlayerColorState
+ * @returns ColorAssignment
+ */
+function award(
+  color: Color,
+  player: PlayerColorState,
+  opponent: PlayerColorState,
 ): ColorAssignment {
-  return playerOne.colorPreference === Color.BLACK
-    ? { white: playerTwo.playerId, black: playerOne.playerId }
-    : { white: playerOne.playerId, black: playerTwo.playerId };
+  return color === Color.WHITE
+    ? { white: player.playerId, black: opponent.playerId }
+    : { white: opponent.playerId, black: player.playerId };
 }
 
 function assignColorsMostAsked(
@@ -116,27 +124,10 @@ function assignColorsMostAsked(
 ): ColorAssignment {
   const oneIsPrior =
     playerOne.colorPreferenceLevel > playerTwo.colorPreferenceLevel;
-  return oneIsPrior
-    ? {
-        white:
-          playerOne.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerOne.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      }
-    : {
-        white:
-          playerTwo.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-        black:
-          playerTwo.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-      };
+  const stronger = oneIsPrior ? playerOne : playerTwo;
+  const weaker = oneIsPrior ? playerTwo : playerOne;
+
+  return grantPreferenceOf(stronger, weaker);
 }
 
 /**
@@ -177,9 +168,7 @@ function assignByWiderDifference(
   const wider = oneDeficit > twoDeficit ? playerOne : playerTwo;
   const other = wider === playerOne ? playerTwo : playerOne;
 
-  return wider.colorPreference === Color.WHITE
-    ? { white: wider.playerId, black: other.playerId }
-    : { white: other.playerId, black: wider.playerId };
+  return grantPreferenceOf(wider, other);
 }
 
 /**
@@ -218,32 +207,10 @@ function giveColorToHighestPlayer(
     (a, b) => b.score - a.score || a.pairingNb - b.pairingNb,
   )[0];
 
-  const isPlayerOne = highRankPlayer.playerId === playerOne.playerId;
+  const lowRankPlayer =
+    highRankPlayer.playerId === playerOne.playerId ? playerTwo : playerOne;
 
-  /**
-   * We return color expected from highRankPlayer, depending on what player it is
-   */
-  return isPlayerOne
-    ? {
-        white:
-          playerOne.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerOne.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      }
-    : {
-        white:
-          playerTwo.colorPreference === Color.BLACK
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerTwo.colorPreference === Color.BLACK
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      };
+  return grantPreferenceOf(highRankPlayer, lowRankPlayer);
 }
 
 function assignWithCompare(
@@ -251,10 +218,6 @@ function assignWithCompare(
   playerTwo: PlayerColorState,
   compare: ColorDiff,
 ): ColorAssignment {
-  return {
-    white:
-      compare.one === Color.BLACK ? playerOne.playerId : playerTwo.playerId,
-    black:
-      compare.one === Color.BLACK ? playerTwo.playerId : playerOne.playerId,
-  };
+  // playerOne takes the opposite of the colour they held at that game
+  return award(getOppositeColor(compare.one), playerOne, playerTwo);
 }
