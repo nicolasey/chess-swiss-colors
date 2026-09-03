@@ -2,7 +2,7 @@
   "name": "@nicolasey/chess-colors",
   "module": "index.ts",
   "type": "module",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "license": "MIT",
   "repository": {
     "type": "git",

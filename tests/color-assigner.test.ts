@@ -8,6 +8,7 @@ import {
   type ColorAssignment,
   type PlayerColorState,
 } from "../index";
+import { differenceFor } from "./fixtures";
 
 const ONE_ID = 1;
 const TWO_ID = 2;
@@ -18,12 +19,14 @@ const createPlayerSample = (
   colorPreference: Color,
   colorPreferenceLevel: ColorPreference,
   playerId = ONE_ID,
+  colorDifference = differenceFor(colorPreference, colorPreferenceLevel),
 ): PlayerColorState => ({
   playerId,
   pairingNb,
   score,
   colorPreference,
   colorPreferenceLevel,
+  colorDifference,
   history: [],
 });
 
@@ -68,12 +71,12 @@ const assign = (
 };
 
 test("CA-7: when_no_preference", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BYE, ColorPreference.LOW);
+  const playerOne = createPlayerSample(1, 0, Color.BYE, ColorPreference.MILD);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BYE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -104,13 +107,13 @@ test("CA-7: round_one_gives_the_drawn_colour_by_pairing_parity", () => {
       higherPairingNb,
       0,
       Color.BYE,
-      ColorPreference.LOW,
+      ColorPreference.MILD,
     );
     const lower = createPlayerSample(
       lowerPairingNb,
       0,
       Color.BYE,
-      ColorPreference.LOW,
+      ColorPreference.MILD,
       TWO_ID,
     );
 
@@ -128,12 +131,12 @@ test("CA-7: round_one_gives_the_drawn_colour_by_pairing_parity", () => {
 });
 
 test("round_one_requires_pairing_numbers", () => {
-  const playerOne = createPlayerSample(0, 0, Color.BYE, ColorPreference.LOW);
+  const playerOne = createPlayerSample(0, 0, Color.BYE, ColorPreference.MILD);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BYE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -146,12 +149,12 @@ test("round_one_requires_pairing_numbers", () => {
 });
 
 test("CA-1: when_diff_preference", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.WHITE,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -162,7 +165,7 @@ test("CA-1: when_diff_preference", () => {
 });
 
 test("CA-3: when_same_preference_diff_level", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
@@ -178,12 +181,12 @@ test("CA-3: when_same_preference_diff_level", () => {
 });
 
 test("CA-3: when_same_preference_diff_level_second", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BLACK,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -194,12 +197,12 @@ test("CA-3: when_same_preference_diff_level_second", () => {
 });
 
 test("CA-6: when_same", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.BLACK,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -210,12 +213,12 @@ test("CA-6: when_same", () => {
 });
 
 test("CA-6: when_same_but_score_diff", () => {
-  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.BLACK, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0.5,
     Color.BLACK,
-    ColorPreference.HIGH,
+    ColorPreference.STRONG,
     TWO_ID,
   );
 
@@ -304,14 +307,16 @@ test("it_should_not_mutate_the_players_it_is_given", () => {
       pairingNb: 1,
       score: 1,
       colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.HIGH,
+      colorPreferenceLevel: ColorPreference.STRONG,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.STRONG),
       history: [{ color: Color.WHITE }, { color: Color.BLACK }],
     },
     {
       pairingNb: 2,
       score: 1,
       colorPreference: Color.BLACK,
-      colorPreferenceLevel: ColorPreference.HIGH,
+      colorPreferenceLevel: ColorPreference.STRONG,
+      colorDifference: differenceFor(Color.BLACK, ColorPreference.STRONG),
       history: [{ color: Color.BLACK }, { color: Color.BLACK }],
     },
   );
@@ -423,7 +428,7 @@ test("CA-2: an_empty_history_also_grants_the_opponent", () => {
  * suite; a mutation there survived until these were added.
  */
 test("CA-3: when_same_preference_diff_level_white", () => {
-  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
@@ -439,12 +444,12 @@ test("CA-3: when_same_preference_diff_level_white", () => {
 });
 
 test("CA-3: when_same_preference_diff_level_white_second", () => {
-  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.HIGH);
+  const playerOne = createPlayerSample(1, 0, Color.WHITE, ColorPreference.STRONG);
   const playerTwo = createPlayerSample(
     2,
     0,
     Color.WHITE,
-    ColorPreference.LOW,
+    ColorPreference.MILD,
     TWO_ID,
   );
 
@@ -461,10 +466,10 @@ test("CA-3: when_same_preference_diff_level_white_second", () => {
  */
 test("CA-8: the_result_never_depends_on_argument_order", () => {
   const shapes: Array<[Color, ColorPreference, Color, ColorPreference]> = [
-    [Color.BYE, ColorPreference.LOW, Color.BYE, ColorPreference.LOW], // 5.2.5
-    [Color.WHITE, ColorPreference.HIGH, Color.BLACK, ColorPreference.HIGH], // 5.2.1
-    [Color.WHITE, ColorPreference.ABSOLUTE, Color.WHITE, ColorPreference.HIGH], // 5.2.2
-    [Color.BLACK, ColorPreference.LOW, Color.BLACK, ColorPreference.LOW], // 5.2.4
+    [Color.BYE, ColorPreference.MILD, Color.BYE, ColorPreference.MILD], // 5.2.5
+    [Color.WHITE, ColorPreference.STRONG, Color.BLACK, ColorPreference.STRONG], // 5.2.1
+    [Color.WHITE, ColorPreference.ABSOLUTE, Color.WHITE, ColorPreference.STRONG], // 5.2.2
+    [Color.BLACK, ColorPreference.MILD, Color.BLACK, ColorPreference.MILD], // 5.2.4
   ];
 
   for (const [onePref, oneLevel, twoPref, twoLevel] of shapes) {
@@ -475,4 +480,149 @@ test("CA-8: the_result_never_depends_on_argument_order", () => {
       assignColors(two, one, Color.WHITE),
     );
   }
+});
+
+/**
+ * CA-4 — FIDE C.04.3 art. 5.2.2, second clause.
+ * Both are absolute for White. playerTwo's difference is −2 against playerOne's
+ * −1, so playerTwo takes it.
+ *
+ * playerOne is deliberately the higher ranked, and at their most recent
+ * differing game playerOne held Black — so 5.2.3 *and* 5.2.4 would both give
+ * White to playerOne. If the clause is skipped this fails, rather than passing
+ * on a fallback that happened to agree.
+ */
+test("CA-4: the_wider_colour_difference_takes_the_colour", () => {
+  const oneHistory = [Color.WHITE, Color.BLACK, Color.BLACK];
+  const twoHistory = [Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 1,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 2,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  // The premise: 5.2.2's second clause is only reached when 5.2.1 and the
+  // first clause cannot decide.
+  expect(playerOne.colorPreference).toBe(playerTwo.colorPreference);
+  expect(playerOne.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerTwo.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(Math.abs(playerTwo.colorDifference)).toBeGreaterThan(
+    Math.abs(playerOne.colorDifference),
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+/**
+ * CA-4 — the two absolute preferences need not share a sign, so the clause is
+ * decided on the deficit rather than on |colorDifference|.
+ *
+ * Both are absolute for White, but playerOne is at +1 — a game of White to the
+ * good, absolute only through the two-in-a-row trigger — while playerTwo is
+ * balanced at 0. playerTwo is the needier of the two and takes White.
+ *
+ * |+1| > |0| would have said the opposite, and so would both fallbacks:
+ * playerOne is the higher ranked, and the histories agree over their common
+ * length so 5.2.3 has nothing to say and 5.2.4 would grant playerOne. Every
+ * other route through assignColors gives White to playerOne.
+ */
+test("CA-4: the_wider_deficit_takes_the_colour_across_opposite_signs", () => {
+  const oneHistory = [
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ];
+  const twoHistory = [
+    Color.WHITE,
+    Color.BLACK,
+    Color.WHITE,
+    Color.WHITE,
+    Color.BLACK,
+    Color.BLACK,
+  ];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 1,
+      score: 2,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 2,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  // The premise: same colour, both absolute, and on opposite sides of balance.
+  expect(playerOne.colorPreference).toBe(Color.WHITE);
+  expect(playerTwo.colorPreference).toBe(Color.WHITE);
+  expect(playerOne.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerTwo.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(playerOne.colorDifference).toBe(1);
+  expect(playerTwo.colorDifference).toBe(0);
+
+  // ...so magnitude ranks playerOne first and the deficit ranks playerTwo.
+  expect(Math.abs(playerOne.colorDifference)).toBeGreaterThan(
+    Math.abs(playerTwo.colorDifference),
+  );
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  expect(result.white).toBe(playerTwo.playerId);
+  expect(result.black).toBe(playerOne.playerId);
+});
+
+/**
+ * CA-4 — equal magnitudes leave the clause with nothing to say, and 5.2.3
+ * decides. This is the common path, not the exotic one: r6 caps the difference
+ * at ±2, so two players absolute *because of* their difference always tie.
+ */
+test("CA-4: equal_magnitudes_fall_through_to_the_next_rule", () => {
+  const oneHistory = [Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK];
+  const twoHistory = [Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK];
+
+  const [playerOne, playerTwo] = createPair(
+    {
+      pairingNb: 2,
+      score: 1,
+      history: oneHistory.map((color) => ({ color })),
+      ...getColorPreference(oneHistory),
+    },
+    {
+      pairingNb: 1,
+      score: 1,
+      history: twoHistory.map((color) => ({ color })),
+      ...getColorPreference(twoHistory),
+    },
+  );
+
+  expect(playerOne.colorDifference).toBe(playerTwo.colorDifference);
+
+  const result = assign(playerOne, playerTwo, Color.BLACK);
+
+  // 5.2.3: playerOne held Black at their most recent differing game, so takes
+  // White. playerTwo is the higher ranked, so 5.2.4 would have said the
+  // opposite — this asserts the fall-through lands on 5.2.3, not past it.
+  expect(result.white).toBe(playerOne.playerId);
+  expect(result.black).toBe(playerTwo.playerId);
 });

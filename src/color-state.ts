@@ -5,7 +5,8 @@ import { Color, getOppositeColor } from "./color.enum";
 export function getColorPreference(colorHistory: Color[]): ColorState {
   const white = colorHistory.filter((item) => item === Color.WHITE).length;
   const black = colorHistory.filter((item) => item === Color.BLACK).length;
-  const diff = Math.abs(white - black);
+  const colorDifference = white - black; // art. 1.6, signed
+  const magnitude = Math.abs(colorDifference); // art. 1.6, unsigned
 
   const lastTwoColors = getLastTwoColors(colorHistory);
 
@@ -20,6 +21,7 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
     return {
       colorPreference: getOppositeColor(lastTwoColors[0]),
       colorPreferenceLevel: ColorPreference.ABSOLUTE,
+      colorDifference,
     };
 
   /**
@@ -27,23 +29,24 @@ export function getColorPreference(colorHistory: Color[]): ColorState {
    * art. 1.7.4 — a player who has played nothing has no preference, which
    * getLastPlayedColor reports as BYE and getOppositeColor passes through.
    */
-  if (diff === 0)
+  if (magnitude === 0)
     return {
       colorPreference: getOppositeColor(getLastPlayedColor(colorHistory)),
-      colorPreferenceLevel: ColorPreference.LOW,
+      colorPreferenceLevel: ColorPreference.MILD,
+      colorDifference,
     };
 
   /**
    * art. 1.7.1/1.7.2 — strong at a difference of one, absolute beyond it. A
    * difference of two or more is already absolute; there is no stronger degree.
-   * OFF_GRID is set explicitly by the caller, never derived here.
    */
   return {
     colorPreference: white > black ? Color.BLACK : Color.WHITE,
     colorPreferenceLevel: Math.min(
-      diff,
+      magnitude,
       ColorPreference.ABSOLUTE,
     ) as ColorPreference,
+    colorDifference,
   };
 }
 

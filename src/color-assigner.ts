@@ -3,6 +3,7 @@ import type {
   ColorAssignment,
   ColorDiff,
 } from "../colors.types";
+import { ColorPreference } from "./color-preference.enum";
 import { Color, getOppositeColor } from "./color.enum";
 import { evaluateColorHistory } from "./color-compare";
 
@@ -34,9 +35,16 @@ export function assignColors(
   if (oneHasNoPreference) return grantPreferenceOf(playerTwo, playerOne);
   if (twoHasNoPreference) return grantPreferenceOf(playerOne, playerTwo);
 
-  if (!hasSamePreference) return assignColorDiffPref(playerOne, playerTwo); // E1
+  // 5.2.1 — preferences differ, so granting one grants the other
+  if (!hasSamePreference) return grantPreferenceOf(playerOne, playerTwo);
   if (hasSamePreference && !hasSameLevel)
-    return assignColorsMostAsked(playerOne, playerTwo); // E2
+    return assignColorsMostAsked(playerOne, playerTwo); // 5.2.2, first clause
+
+  // 5.2.2, second clause. Levels are equal here, so testing one is enough.
+  if (playerOne.colorPreferenceLevel === ColorPreference.ABSOLUTE) {
+    const byWiderDifference = assignByWiderDifference(playerOne, playerTwo);
+    if (byWiderDifference !== null) return byWiderDifference;
+  }
 
   // If same preference, and same level, then we compare color history
   const compare = evaluateColorHistory(playerOne.history, playerTwo.history);
@@ -70,9 +78,7 @@ function assignColorNoPref(
     ? getOppositeColor(randomColor)
     : randomColor;
 
-  return higherGets === Color.WHITE
-    ? { white: higher.playerId, black: lower.playerId }
-    : { white: lower.playerId, black: higher.playerId };
+  return award(higherGets, higher, lower);
 }
 
 /**
@@ -89,18 +95,27 @@ function grantPreferenceOf(
   player: PlayerColorState,
   opponent: PlayerColorState,
 ): ColorAssignment {
-  return player.colorPreference === Color.WHITE
-    ? { white: player.playerId, black: opponent.playerId }
-    : { white: opponent.playerId, black: player.playerId };
+  return award(player.colorPreference, player, opponent);
 }
 
-function assignColorDiffPref(
-  playerOne: PlayerColorState,
-  playerTwo: PlayerColorState,
+/**
+ * The shape every rule in art. 5.2 ends in: one player takes a colour and the
+ * opponent takes the other. Only the choice of player and colour differs, so
+ * that choice is all each rule above is left holding.
+ *
+ * @param color Color the one `player` receives
+ * @param player PlayerColorState
+ * @param opponent PlayerColorState
+ * @returns ColorAssignment
+ */
+function award(
+  color: Color,
+  player: PlayerColorState,
+  opponent: PlayerColorState,
 ): ColorAssignment {
-  return playerOne.colorPreference === Color.BLACK
-    ? { white: playerTwo.playerId, black: playerOne.playerId }
-    : { white: playerOne.playerId, black: playerTwo.playerId };
+  return color === Color.WHITE
+    ? { white: player.playerId, black: opponent.playerId }
+    : { white: opponent.playerId, black: player.playerId };
 }
 
 function assignColorsMostAsked(
@@ -109,27 +124,67 @@ function assignColorsMostAsked(
 ): ColorAssignment {
   const oneIsPrior =
     playerOne.colorPreferenceLevel > playerTwo.colorPreferenceLevel;
-  return oneIsPrior
-    ? {
-        white:
-          playerOne.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerOne.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      }
-    : {
-        white:
-          playerTwo.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-        black:
-          playerTwo.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-      };
+  const stronger = oneIsPrior ? playerOne : playerTwo;
+  const weaker = oneIsPrior ? playerTwo : playerOne;
+
+  return grantPreferenceOf(stronger, weaker);
+}
+
+/**
+ * FIDE C.04.3 art. 5.2.2, second clause
+ * Both players hold the same absolute preference, so only the colour difference
+ * separates them: the one further from balance takes the colour it wants.
+ *
+ * "Wider" is measured against the colour the player is asking for, not as a
+ * magnitude. Art. 1.7.1 has two alternative triggers, and the two-in-a-row one
+ * fires whatever the difference is — so two players absolute for the same
+ * colour need not be on the same side of zero. W,B,B is absolute for White at
+ * −1; W,W,B,W,W,B,B is absolute for White at +1, already a game of White to the
+ * good. Comparing |−1| with |+1| calls those equal, and comparing |+1| with a
+ * balanced |0| hands White to the player who has had more of it.
+ *
+ * The deficit orients the difference by what the player wants, so more always
+ * means needier, and art. 1.6's sign does the work rather than being discarded.
+ *
+ * Returns null when the deficits are equal, which leaves art. 5.2.3 to decide.
+ * That is the common outcome rather than the exception: C.04.1 r6 caps the
+ * difference at ±2, so a preference absolute *because of* the difference is
+ * always exactly ±2. The clause separates players only when one of them is
+ * absolute through the two-in-a-row trigger at some other difference.
+ *
+ * @param playerOne PlayerColorState
+ * @param playerTwo PlayerColorState
+ * @returns ColorAssignment | null
+ */
+function assignByWiderDifference(
+  playerOne: PlayerColorState,
+  playerTwo: PlayerColorState,
+): ColorAssignment | null {
+  const oneDeficit = deficitOfPreferredColor(playerOne);
+  const twoDeficit = deficitOfPreferredColor(playerTwo);
+
+  if (oneDeficit === twoDeficit) return null;
+
+  const wider = oneDeficit > twoDeficit ? playerOne : playerTwo;
+  const other = wider === playerOne ? playerTwo : playerOne;
+
+  return grantPreferenceOf(wider, other);
+}
+
+/**
+ * How many games short of balance the player is *in the colour they want*.
+ *
+ * Art. 1.6 makes the colour difference White minus Black, so a player wanting
+ * White is short by −colorDifference and one wanting Black by +colorDifference.
+ * Positive means owed that colour, negative means already over-supplied.
+ *
+ * Only comparable between players who want the same colour, which is the only
+ * place art. 5.2.2's second clause is reached.
+ */
+function deficitOfPreferredColor(player: PlayerColorState): number {
+  return player.colorPreference === Color.WHITE
+    ? -player.colorDifference
+    : player.colorDifference;
 }
 
 function isEven(integer: number): boolean {
@@ -152,32 +207,10 @@ function giveColorToHighestPlayer(
     (a, b) => b.score - a.score || a.pairingNb - b.pairingNb,
   )[0];
 
-  const isPlayerOne = highRankPlayer.playerId === playerOne.playerId;
+  const lowRankPlayer =
+    highRankPlayer.playerId === playerOne.playerId ? playerTwo : playerOne;
 
-  /**
-   * We return color expected from highRankPlayer, depending on what player it is
-   */
-  return isPlayerOne
-    ? {
-        white:
-          playerOne.colorPreference === Color.WHITE
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerOne.colorPreference === Color.WHITE
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      }
-    : {
-        white:
-          playerTwo.colorPreference === Color.BLACK
-            ? playerOne.playerId
-            : playerTwo.playerId,
-        black:
-          playerTwo.colorPreference === Color.BLACK
-            ? playerTwo.playerId
-            : playerOne.playerId,
-      };
+  return grantPreferenceOf(highRankPlayer, lowRankPlayer);
 }
 
 function assignWithCompare(
@@ -185,10 +218,6 @@ function assignWithCompare(
   playerTwo: PlayerColorState,
   compare: ColorDiff,
 ): ColorAssignment {
-  return {
-    white:
-      compare.one === Color.BLACK ? playerOne.playerId : playerTwo.playerId,
-    black:
-      compare.one === Color.BLACK ? playerTwo.playerId : playerOne.playerId,
-  };
+  // playerOne takes the opposite of the colour they held at that game
+  return award(getOppositeColor(compare.one), playerOne, playerTwo);
 }

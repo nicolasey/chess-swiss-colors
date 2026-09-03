@@ -12,7 +12,7 @@ test("CP-1: when_nothing_happened", () => {
   const result = getColorPreference([]);
 
   expect(result.colorPreference).toBe(Color.BYE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
 });
 
 test("CP-3: after_round_one", () => {
@@ -20,7 +20,7 @@ test("CP-3: after_round_one", () => {
     const result = getColorPreference([color]);
 
     expect(result.colorPreference).toBe(getOppositeColor(color));
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.STRONG);
   }
 });
 
@@ -30,17 +30,17 @@ test("CP-2: when_balanced", () => {
     const result = getColorPreference([getOppositeColor(lastPlayed), lastPlayed]);
 
     expect(result.colorPreference).toBe(getOppositeColor(lastPlayed));
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
   }
 });
 
-test("CP-3: when_high", () => {
+test("CP-3: when_strong", () => {
   for (const majority of [Color.WHITE, Color.BLACK]) {
     const minority = getOppositeColor(majority);
     const result = getColorPreference([majority, minority, majority]);
 
     expect(result.colorPreference).toBe(minority);
-    expect(result.colorPreferenceLevel).toBe(ColorPreference.HIGH);
+    expect(result.colorPreferenceLevel).toBe(ColorPreference.STRONG);
   }
 });
 
@@ -71,7 +71,7 @@ test("CP-8: it_should_ignore_byes", () => {
   result = getColorPreference([Color.WHITE, Color.BYE, Color.BLACK]);
 
   expect(result.colorPreference).toBe(Color.WHITE);
-  expect(result.colorPreferenceLevel).toBe(ColorPreference.LOW);
+  expect(result.colorPreferenceLevel).toBe(ColorPreference.MILD);
 });
 
 test("it_should_not_mutate_the_history_it_is_given", () => {
@@ -223,4 +223,39 @@ test("CP-4: a_difference_beyond_one_is_absolute", () => {
     expect(result.colorPreference).toBe(minority);
     expect(result.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
   }
+});
+
+/**
+ * CP-10 — FIDE C.04.3 art. 1.6
+ * The colour difference is games played White minus games played Black, and it
+ * is signed: a preference for White goes with a negative difference. Art. 5.2.2
+ * breaks a tie between two absolute preferences on its magnitude, which the
+ * capped level cannot express, so ColorState reports the number itself.
+ */
+test("CP-10: reports_the_signed_colour_difference", () => {
+  expect(getColorPreference([]).colorDifference).toBe(0);
+  expect(getColorPreference([Color.WHITE]).colorDifference).toBe(1);
+  expect(getColorPreference([Color.BLACK]).colorDifference).toBe(-1);
+  expect(
+    getColorPreference([Color.WHITE, Color.WHITE, Color.BLACK]).colorDifference,
+  ).toBe(1);
+});
+
+test("CP-10: unplayed_rounds_do_not_move_the_difference", () => {
+  expect(
+    getColorPreference([Color.WHITE, Color.BYE, Color.BLACK, Color.BYE])
+      .colorDifference,
+  ).toBe(0);
+});
+
+test("CP-10: the_difference_agrees_with_the_level_it_produced", () => {
+  // Two absolute preferences of equal magnitude — the case art. 5.2.2 cannot
+  // separate, and the reason the raw number has to travel with the level.
+  const one = getColorPreference([Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK]);
+  const two = getColorPreference([Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK]);
+
+  expect(one.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(two.colorPreferenceLevel).toBe(ColorPreference.ABSOLUTE);
+  expect(one.colorPreference).toBe(two.colorPreference);
+  expect(one.colorDifference).toBe(two.colorDifference);
 });

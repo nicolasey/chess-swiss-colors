@@ -30,9 +30,11 @@ const bobHistory = [Color.BLACK, Color.WHITE, Color.BLACK];
 
 // 1. Derive each player's color state from their color history
 const aliceState = getColorPreference(aliceHistory);
-// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.HIGH }
+// → { colorPreference: Color.BLACK, colorPreferenceLevel: ColorPreference.STRONG,
+//     colorDifference: 1 }
 const bobState = getColorPreference(bobHistory);
-// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.HIGH }
+// → { colorPreference: Color.WHITE, colorPreferenceLevel: ColorPreference.STRONG,
+//     colorDifference: -1 }
 
 // 2. Assign colors to a pair
 assignColors(
@@ -55,6 +57,31 @@ assignColors(
 // → { white: "bob", black: "alice" }
 ```
 
+## Upgrading to 0.3.0
+
+Breaking, all mechanical. No behaviour you were relying on changes silently.
+
+| Before | After | Why |
+|---|---|---|
+| `ColorPreference.LOW` | `ColorPreference.MILD` | art. 1.7.3's own word |
+| `ColorPreference.HIGH` | `ColorPreference.STRONG` | art. 1.7.2's own word |
+| `ColorPreference.OFF_GRID` | *(removed)* | had no FIDE counterpart and was never derived; use `isFinalRoundTopscorer` |
+| `isTopPlayer(player)` | `isTopscorer(player)` | art. 1.8's own word |
+| `ColorState` had two fields | now three | `colorDifference` is required |
+
+The enum's numeric values are unchanged, so `MILD`/`STRONG`/`ABSOLUTE` still
+compare by strength and anything persisted as a number still reads back the same.
+
+`ColorState` gaining `colorDifference` only affects states you build by hand;
+anything coming out of `getColorPreference` carries it already. Art. 5.2.2's
+second clause needs the signed value, and no cap on the level can stand in for it.
+
+One behaviour changed: step 5 of `assignColors` used to compare
+`Math.abs(colorDifference)`. It compares the deficit now. Same answer whenever
+the two players sit on the same side of balance — which is every pair whose
+preference is absolute *because of* the difference — and the correct one when
+they do not.
+
 ## API
 
 ### `getColorPreference(history: Color[]): ColorState`
@@ -67,13 +94,19 @@ balanced history can still be absolute (art. 1.7.1):
 | History | Result |
 |---|---|
 | Same color in the two latest games played | **opposite of that color, `ABSOLUTE`** |
-| Balanced, last game played | opposite of last color, `LOW` |
-| Balanced, no game played | `Color.BYE` — no preference, `LOW` |
-| Diff of 1 | minority color, `HIGH` |
+| Balanced, last game played | opposite of last color, `MILD` |
+| Balanced, no game played | `Color.BYE` — no preference, `MILD` |
+| Diff of 1 | minority color, `STRONG` |
 | Diff of 2+ | minority color, `ABSOLUTE` |
 
-`OFF_GRID` is never derived here — set it yourself when a system grants a
-last-round exception to a top player.
+The level names are FIDE's own (art. 1.7.1-1.7.3: absolute, strong, mild).
+
+All three fields are returned, and none is derivable from the others. The two
+absolute triggers are alternatives, so `ABSOLUTE` says nothing about the size of
+`colorDifference`: `[W,B,W,W,B,B]` is balanced at `0` and absolute for White,
+while `[W,B,W,B]` is balanced at `0` and only mild. `colorDifference` is signed
+per art. 1.6 — White games minus Black — so a preference for White comes with a
+negative one, and that sign is what `assignColors` step 5 needs.
 
 ### `assignColors(playerOne, playerTwo, randomColor): ColorAssignment`
 
@@ -85,21 +118,40 @@ Returns `{ white: PlayerId, black: PlayerId }`. Resolution order:
 2. Exactly one has no preference → the other's is granted (1.7.4).
 3. Different preferences → both get what they want (5.2.1).
 4. Same preference, different level → the stronger wins (5.2.2).
-5. Same preference and level → the most recent game in which the two held
+5. Same preference, both absolute → the wider color difference wins (5.2.2),
+   measured *against the color asked for*: a player wanting white is short by
+   `-colorDifference`, one wanting black by `+colorDifference`, and the needier
+   of the two takes it. Equal deficits fall through to the next rule, which is
+   the common case. Reachable only for a pair `isColorCompatible` permits, so
+   in practice only when a topscorer is involved.
+6. Same preference and level → the most recent game in which the two held
    different colors decides; whoever had black there now gets white (5.2.3).
-6. Still tied → higher rank wins: score first, then lowest pairing
+7. Still tied → higher rank wins: score first, then lowest pairing
    number (5.2.4, ranked per 1.2).
 
 ### `isColorCompatible(playerOne, playerTwo): boolean`
 
-`false` only when both players have the *same* preference at `ABSOLUTE` level.
-Call it before pairing to avoid building a pair no color assignment can save.
+`false` when both players have the *same* preference at `ABSOLUTE` level — and
+neither is a final-round topscorer (2.1.3 [C3]). Call it before pairing to avoid
+building a pair no color assignment can save.
 
-### `isTopPlayer(player): boolean`
+Set `isFinalRoundTopscorer` on a player to lift the prohibition. One topscorer
+in the pair is enough; the colors are then decided by the wider color difference
+(step 5 above). **This flag means art. 1.8's topscorer — a status that exists
+only when pairing the final round.** This package has no round counter and
+cannot infer one, so setting it in an earlier round produces pairings FIDE
+forbids and nothing here will notice.
 
-`score > history.length / 2`. History is assumed to include forfeits, so its
-length equals the number of rounds played. Used to decide who may bypass an
-absolute preference in the last round.
+### `isTopscorer(player): boolean`
+
+`score > history.length / 2` — art. 1.8's topscorer, above 50% of the maximum
+possible. History is assumed to include forfeits and byes, so its length equals
+the number of rounds played, and a win is assumed to be worth one point.
+
+It answers the **score** half of art. 1.8 only. The definition also requires
+that you are pairing the final round, which this library cannot check — see
+`isFinalRoundTopscorer` above. Use this to find your topscorers, then set the
+flag yourself.
 
 ### `evaluateColorHistory(historyOne, historyTwo): ColorDiff | null`
 
@@ -111,15 +163,20 @@ over their common length.
 
 ```ts
 enum Color { WHITE = "W", BLACK = "B", BYE = "BYE" }
-enum ColorPreference { LOW = 0, HIGH = 1, ABSOLUTE = 2, OFF_GRID = 3 }
+enum ColorPreference { MILD = 0, STRONG = 1, ABSOLUTE = 2 }
 
-type ColorState = { colorPreference: Color; colorPreferenceLevel: ColorPreference };
+type ColorState = {
+  colorPreference: Color;
+  colorPreferenceLevel: ColorPreference;
+  colorDifference: number;    // signed: White games minus Black (art. 1.6)
+};
 
 type PlayerColorState = ColorState & {
   playerId: string | number;
-  pairingNb: number;          // 1-based, lower = higher ranked
+  pairingNb: number;             // 1-based, lower = higher ranked
   score: number;
-  history: { color: Color }[]; // oldest first
+  history: { color: Color }[];   // oldest first
+  isFinalRoundTopscorer?: boolean; // art. 1.8; absent means false
 };
 ```
 
@@ -133,8 +190,9 @@ Also exported: `getOppositeColor`, `getLastPlayedColor`, `getLastTwoColors`,
 - **The random color is physical.** FIDE requires the higher-ranked player to
   draw a color before round 1. Your software should ask the arbiter for it at
   tournament start and pass the same value to every `assignColors` call.
-- **Last-round exceptions are yours to apply.** This library never sets
-  `OFF_GRID` on its own; combine `isTopPlayer` with your system's rules.
+- **Last-round exceptions are yours to apply.** Combine `isTopscorer` with your
+  system's rules to decide who is a topscorer, then set
+  `isFinalRoundTopscorer` — that flag is the only thing that lifts [C3].
 - **`Color.BYE` covers every unplayed round** — byes, forfeits, absences. FIDE
   needs no distinction between them for color: only games played count.
 - **`assignColors` recommends, it does not decide.** This package computes
